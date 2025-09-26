@@ -3,6 +3,7 @@ from PIL import Image
 from tkinter import messagebox
 import menu
 import cadastro
+import feedbacks
 
 # === CONFIGURAÇÃO INICIAL ===
 ctk.set_appearance_mode("light")
@@ -136,8 +137,58 @@ frame_footer = ctk.CTkFrame(frame_right, corner_radius=0, fg_color="#E98C41", he
 frame_footer.grid(row=2, column=0, sticky="ew")
 frame_footer.grid_propagate(False)
 
+# Container para os links
+links_frame = ctk.CTkFrame(frame_footer, fg_color="transparent")
+links_frame.pack(pady=(20,20))
+
+# Funções para cada botão
+def abrir_politica():
+    win = ctk.CTkToplevel(app)
+    win.title("Política de Privacidade")
+    ctk.CTkLabel(win, text="Política de Privacidade", font=("Arial", 20, "bold")).pack(pady=20)
+
+def abrir_suporte():
+    win = ctk.CTkToplevel(app)
+    win.title("Suporte")
+    ctk.CTkLabel(win, text="Suporte", font=("Arial", 20, "bold")).pack(pady=20)
+
+def abrir_comentarios():
+    feedbacks.coletar_satisfacao()
+
+# Botões estilo link
+def hover_underline(widget, base_font=("Arial", 14, "bold")):
+    widget.bind("<Enter>", lambda e: widget.configure(font=(base_font[0], base_font[1], "underline", "bold")))
+    widget.bind("<Leave>", lambda e: widget.configure(font=base_font))
+
+btn_politica = ctk.CTkButton(links_frame, text="Política de Privacidade", font=("Arial", 14, "bold"),
+                              fg_color="transparent", hover_color="#E98C41",
+                              text_color="#FFFFFF", command=abrir_politica)
+btn_politica.pack(side="left")
+
+
+ctk.CTkLabel(links_frame, text="|", text_color="#FFFFFF", font=("Arial", 12)).pack(side="left", padx=1)
+
+
+btn_suporte = ctk.CTkButton(links_frame, text="Suporte", font=("Arial", 14, "bold"),
+                              fg_color="transparent", hover_color="#E98C41",
+                              text_color="#FFFFFF", command=abrir_suporte)
+btn_suporte.pack(side="left")
+
+
+ctk.CTkLabel(links_frame, text="|", text_color="#FFFFFF", font=("Arial", 12)).pack(side="left", padx=1)
+
+
+btn_comentarios = ctk.CTkButton(links_frame, text="Comentários", font=("Arial", 14, "bold"),
+                              fg_color="transparent", hover_color="#E98C41",
+                              text_color="#FFFFFF", command=abrir_comentarios)
+btn_comentarios.pack(side="left")
+
+hover_underline(btn_politica)
+hover_underline(btn_suporte)
+hover_underline(btn_comentarios)
+
 footer_label = ctk.CTkLabel(frame_footer,
-                            text="Política de Privacidade | Ajuda | Suporte\n\n📞 (91)98765-4321   🌐 www.projetoloja.com",
+                            text="\n📞 (91)98765-4321   🌐 www.projetoloja.com",
                             text_color="#FFFFFF", font=("Arial", 14, "bold"))
 footer_label.pack(expand=True, pady=5)
 
