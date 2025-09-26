@@ -12,7 +12,7 @@ ctk.set_default_color_theme("blue")
 app = ctk.CTk()
 app.geometry("1200x700")
 app.minsize(900, 500)  # tamanho mínimo para manter responsividade
-app.title("Menu Inicial")
+app.title("Menu Inicial") #comentario
 
 # CONFIGURAÇÃO GRID PRINCIPAL
 app.grid_rowconfigure(0, weight=1)   # linha 0 expande
