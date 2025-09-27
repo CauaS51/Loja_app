@@ -1,9 +1,9 @@
 import customtkinter as ctk
 from PIL import Image
 from tkinter import messagebox
-import menu
-import cadastro
-import feedbacks
+import data.menu as menu
+import data.cadastro as cadastro
+import data.feedbacks as feedbacks
 
 # === CONFIGURAÇÃO INICIAL ===
 ctk.set_appearance_mode("light")
