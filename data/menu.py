@@ -99,6 +99,7 @@ def mostrar_menu():
     tabs.pack(fill="both", expand=True, padx=20, pady=20)
     tabs.add("Produtos")
     tabs.add("Carrinho")
+    tabs.add("Promoções")
 
     # === FRAME PRODUTOS ===
     produtos_frame = ctk.CTkScrollableFrame(
