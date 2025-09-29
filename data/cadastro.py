@@ -8,7 +8,7 @@ def abrir_cadastro(app):
     largura, altura =900, 600
     cadastro_win.geometry(f"{largura}x{altura}")
 
-    # Faz a janela ficar acima da janela principal
+    # FAZ A JANELA DE CADASTRO FICAR ACIMA DA JANELA PRINCIPAL
     cadastro_win.transient(app)  # "app" é a janela principal
     cadastro_win.grab_set()      # impede interações com a janela principal até fechar a de cadastro
 
@@ -29,10 +29,10 @@ def abrir_cadastro(app):
     entry_user_cad = ctk.CTkEntry(cadastro_win, placeholder_text="Usuário", width=300, height=40)
     entry_user_cad.pack(pady=10)
 
-    entry_email = ctk.CTkEntry(cadastro_win, placeholder_text="Email", show="*", width=300, height=40)
+    entry_email = ctk.CTkEntry(cadastro_win, placeholder_text="Email", width=300, height=40)
     entry_email.pack(pady=10)
     
-    entry_confirm_email = ctk.CTkEntry(cadastro_win, placeholder_text="Confirmar Email", show="*", width=300, height=40)
+    entry_confirm_email = ctk.CTkEntry(cadastro_win, placeholder_text="Confirmar Email", width=300, height=40)
     entry_confirm_email.pack(pady=10)
 
     entry_pass_cad = ctk.CTkEntry(cadastro_win, placeholder_text="Senha", show="*", width=300, height=40)
