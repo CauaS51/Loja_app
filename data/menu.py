@@ -1,35 +1,30 @@
 import customtkinter as ctk
 from tkinter import messagebox
+from PIL import Image
+import data.feedbacks as feedbacks
 
-def mostrar_menu():
+def mostrar_menu(root):
+    """
+    Mostra o menu da loja na janela principal recebida como parâmetro.
+    """
     # === CONFIGURAÇÃO GLOBAL ===
     ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")
 
-    # Variável global de tema
-    modo_escuro = False
-
-    # === CRIAÇÃO DA JANELA PRINCIPAL ===
-    menu = ctk.CTk()
-    menu.geometry("1200x700")
-    menu.minsize(900, 500)
-    menu.title("Sistema de Gerenciamento")
-
-        # === FUNÇÃO: EXIBE MENU DE PRODUTOS ===
-
-    for w in menu.winfo_children():
+    # Limpa todos os widgets existentes na janela
+    for w in root.winfo_children():
         w.destroy()
-    menu.title("🛍️ Loja Virtual")
+    root.title("🛍️ Loja Virtual")
 
-    # Cores e fontes
-    PRIMARY_COLOR    = "#FF7043"
-    HOVER_COLOR      = "#FF5722"
+    # === CORES E FONTES ===
+    PRIMARY_COLOR    = "#E98C41"
+    HOVER_COLOR      = "#E2B539"
     BACKGROUND_COLOR = "#F8F8F8"
     CARD_COLOR       = "#FFFFFF"
     TEXT_COLOR       = "#333333"
 
     # === FRAME PRINCIPAL ===
-    main_frame = ctk.CTkFrame(menu, fg_color=BACKGROUND_COLOR)
+    main_frame = ctk.CTkFrame(root, fg_color=BACKGROUND_COLOR)
     main_frame.pack(fill="both", expand=True)
 
     # === HEADER ===
@@ -76,7 +71,7 @@ def mostrar_menu():
     )
     switch_tema.grid(row=0, column=3, padx=(10,20), pady=15)
 
-    # Dados iniciais
+    # === DADOS INICIAIS ===
     produtos = [
         {"nome": "Arroz 5kg", "preco": 22.90},
         {"nome": "Feijão 1kg", "preco": 8.50},
@@ -99,7 +94,6 @@ def mostrar_menu():
     tabs.pack(fill="both", expand=True, padx=20, pady=20)
     tabs.add("Produtos")
     tabs.add("Carrinho")
-    tabs.add("Promoções")
 
     # === FRAME PRODUTOS ===
     produtos_frame = ctk.CTkScrollableFrame(
@@ -160,7 +154,7 @@ def mostrar_menu():
     )
     btn_add_prod.pack(side="right", padx=(10,20), pady=12)
 
-    # Atualizações
+    # === FUNÇÕES DE ATUALIZAÇÃO ===
     def atualizar_lista_produtos():
         term = entry_search.get().lower().strip()
         for w in produtos_frame.winfo_children():
@@ -240,9 +234,11 @@ def mostrar_menu():
         atualizar_carrinho()
 
     def remover_do_carrinho(prod):
-        carrinho.remove(prod)
+        if prod in carrinho:
+            carrinho.remove(prod)
         atualizar_carrinho()
 
+    # Botão de finalizar compra
     btn_finalizar = ctk.CTkButton(
         tabs.tab("Carrinho"),
         text="✅ Finalizar compra",
@@ -253,15 +249,20 @@ def mostrar_menu():
         corner_radius=12,
         font=ctk.CTkFont(size=16, weight="bold"),
         command=lambda: (
-            messagebox.showinfo("Compra concluída", f"Total pago: R$ {sum(p['preco'] for p in carrinho):.2f}"),
+            messagebox.showinfo(
+                "Compra concluída",
+                f"Total pago: R$ {sum(p['preco'] for p in carrinho):.2f}"
+            ),
             carrinho.clear(),
             atualizar_carrinho()
         )
     )
     btn_finalizar.pack(pady=20)
 
+    # Bind de busca
     entry_search.bind("<KeyRelease>", lambda e: atualizar_lista_produtos())
     btn_search.configure(command=atualizar_lista_produtos)
+
+    # Inicializa listas
     atualizar_lista_produtos()
     atualizar_carrinho()
-    menu.mainloop()

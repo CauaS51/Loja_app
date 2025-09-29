@@ -61,7 +61,7 @@ def coletar_satisfacao():
         else:
             messagebox.showwarning("Atenção", "Por favor, escreva seu feedback antes de enviar.")
 
-    # Botões
+    # BOTÕES
     botoes_frame = ctk.CTkFrame(satisfacao_win, fg_color="transparent")
     botoes_frame.pack(pady=20)
 
@@ -103,7 +103,7 @@ def visualizar_feedbacks():
         font=ctk.CTkFont(size=20, weight="bold")
     ).pack(pady=20)
 
-    # Área de texto para mostrar os feedbacks
+    # ÁREA DE TEXTO PARA EXIBIR OS FEEDBACKS
     text_feedbacks = ctk.CTkTextbox(
         feedbacks_win,
         width=550, height=350,
@@ -112,7 +112,7 @@ def visualizar_feedbacks():
     )
     text_feedbacks.pack(pady=10, padx=20)
 
-    # Carregar feedbacks do arquivo
+    # CARREGA OS FEEDBACKS DO ARQUIVO
     try:
         arquivo = "feedbacks/feedbacks_clientes.txt"
         if os.path.exists(arquivo):
@@ -127,7 +127,7 @@ def visualizar_feedbacks():
     except Exception as e:
         text_feedbacks.insert("1.0", f"Erro ao carregar feedbacks: {e}")
 
-    # Tornar o texto somente leitura
+    # TORNAR O TEXTO SOMENTE LEITURA
     text_feedbacks.configure(state="disabled")
 
     ctk.CTkButton(
