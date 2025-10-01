@@ -1,7 +1,21 @@
-Baixar Visual Studio Code
-Baixar Python
-Instalar extensões no VS Code
+1-TKINTER
+Baixar Visual Studio Code;
+Baixar Python;
+Instalar extensões no VS Code;
+Executar 'pip install pillow' no terminal do VS Code;
+Executar 'pip install customtkinter' no terminal do VS Code;
 
+2-GITHUB
+Baixar o GIT;
+Logar no GitHub (Site);
+Logar GitHub no VS Code;
+Executar 'git config --global user.name "Nome de Usuário" ' (Definir nome de usuário do Github);
+Executar 'git config --global user.email "email@email.com" ' (Definir email logado no Github).
 
+3-BANCO DE DADOS
+Baixar o Java;
+Baixar o brmodelo para esquematização do banco de dados;
+Criar Modelo de Negócio;
 
-brmodelo
+Abrir WampServer;
+Abrir MySQL Workbench.

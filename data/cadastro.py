@@ -31,9 +31,6 @@ def abrir_cadastro(app):
 
     entry_email = ctk.CTkEntry(cadastro_win, placeholder_text="Email", width=300, height=40)
     entry_email.pack(pady=10)
-    
-    entry_confirm_email = ctk.CTkEntry(cadastro_win, placeholder_text="Confirmar Email", width=300, height=40)
-    entry_confirm_email.pack(pady=10)
 
     entry_pass_cad = ctk.CTkEntry(cadastro_win, placeholder_text="Senha", show="*", width=300, height=40)
     entry_pass_cad.pack(pady=10)
