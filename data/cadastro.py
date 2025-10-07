@@ -22,7 +22,7 @@ def abrir_cadastro(app):
     y = app_y + (app_altura // 2) - (altura // 2)
     cadastro_win.geometry(f"{largura}x{altura}+{x}+{y}")
     
-    ctk.CTkLabel(cadastro_win, text="Cadastro", font=ctk.CTkFont(size=22, weight="bold")).pack(pady=20)
+    ctk.CTkLabel(cadastro_win, text="Realizar Cadastro", font=ctk.CTkFont(size=22, weight="bold")).pack(pady=20)
     entry_nome_cad = ctk.CTkEntry(cadastro_win, placeholder_text="Nome completo", width=300, height=40)
     entry_nome_cad.pack(pady=10)
 

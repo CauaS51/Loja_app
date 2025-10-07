@@ -1,268 +1,170 @@
 import customtkinter as ctk
 from tkinter import messagebox
-from PIL import Image
-import data.feedbacks as feedbacks
+from data.colors import *
+import loja
+import data.caixa as caixa
+import data.cadastro as cadastro
 
-def mostrar_menu(root):
-    """
-    Mostra o menu da loja na janela principal recebida como parâmetro.
-    """
-    # === CONFIGURAÇÃO GLOBAL ===
+# === PERFIS ===
+PROFILES = {
+    "Desenvolvedor": {"Caixa": True, "Repositório": True, "Relatórios": True, "Cadastros": True},
+    "Caixa": {"Caixa": True, "Repositório": False, "Relatórios": False, "Cadastros": False},
+    "Reposição": {"Caixa": False, "Repositório": True, "Relatórios": False, "Cadastros": False},
+    "Administração": {"Caixa": False, "Repositório": False, "Relatórios": True, "Cadastros": True}
+}
+
+# --- CARD REUTILIZÁVEL ---
+class Card(ctk.CTkFrame):
+    def __init__(self, master, title, color, icon_text, command=None, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.configure(fg_color=color, corner_radius=15)
+        self.title = title
+        self.command = command
+        self.is_locked = True
+
+        # ÍCONE
+        self.icon = ctk.CTkLabel(self, text=icon_text, font=("Segoe UI", 28, "bold"), text_color="#E98C41", bg_color=color)
+        self.icon.grid(row=0, column=0, padx=(20,10), pady=20, sticky="w")
+
+        # TÍTULO
+        self.lbl = ctk.CTkLabel(self, text=title, font=("Segoe UI", 20, "bold"), text_color="white", bg_color=color)
+        self.lbl.grid(row=0, column=1, sticky="w", padx=(0,10))
+
+        # BIND CLIQUE
+        self.bind("<Button-1>", self._on_click)
+        self.icon.bind("<Button-1>", self._on_click)
+        self.lbl.bind("<Button-1>", self._on_click)
+
+        # OVERLAY DE BLOQUEIO
+        self.overlay = ctk.CTkFrame(self, fg_color="#3b3b3b", corner_radius=15)
+        self.overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+        self.lock_label = ctk.CTkLabel(self.overlay, text="🔒 Bloqueado", font=("Segoe UI", 14, "bold"), text_color="white")
+        self.lock_label.place(relx=0.5, rely=0.5, anchor="center")
+
+    def _on_click(self, event=None):
+        if self.is_locked:
+            messagebox.showwarning("Acesso negado", f"A opção '{self.title}' está bloqueada.")
+        elif callable(self.command):
+            self.command(self.title)
+
+    def set_locked(self, locked=True):
+        self.is_locked = locked
+        if locked:
+            self.overlay.lift()
+            self.icon.configure(text_color="#e6e6e6")
+            self.lbl.configure(text_color="#e6e6e6")
+        else:
+            self.overlay.lower()
+            self.icon.configure(text_color="white")
+            self.lbl.configure(text_color="white")
+
+# --- FUNÇÕES AUXILIARES ---
+def aplicar_permissoes(cards, profile_name):
+    perms = PROFILES.get(profile_name, {})
+    for key, card in cards.items():
+        allowed = perms.get(key, False)
+        card.set_locked(not allowed)
+
+# --- FUNÇÕES DE ABERTURA DE MÓDULOS ---
+def abrir_caixa(app):
+    caixa.abrir_caixa(app)
+
+def abrir_cadastros(app):
+    cadastro.abrir_cadastro(app)
+
+def abrir_modulo(app, module_name):
+    win = ctk.CTkToplevel(app)
+    win.title(module_name)
+    win.geometry("600x420")
+    win.transient(app)
+    win.grab_set()
+
+    ctk.CTkLabel(win, text=f"Módulo {module_name}", font=("Segoe UI", 18, "bold")).pack(pady=24)
+    ctk.CTkLabel(win, text="Função em Desenvolvimento", font=("Segoe UI", 12), justify="center").pack(pady=8)
+    ctk.CTkButton(win, text="Fechar", command=win.destroy).pack(side="bottom", pady=18)
+
+# === FUNÇÃO PRINCIPAL PARA MOSTRAR O MENU ===
+def mostrar_menu(app, usuario, perfil="Administrador"):
+    for w in app.winfo_children():
+        w.destroy()
+
     ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")
 
-    # Limpa todos os widgets existentes na janela
-    for w in root.winfo_children():
-        w.destroy()
-    root.title("🛍️ Loja Virtual")
+    app.geometry("1200x700")
+    app.minsize(900, 500)
+    app.title("Menu Inicial")
 
-    # === CORES E FONTES ===
-    PRIMARY_COLOR    = "#E98C41"
-    HOVER_COLOR      = "#E2B539"
-    BACKGROUND_COLOR = "#F8F8F8"
-    CARD_COLOR       = "#FFFFFF"
-    TEXT_COLOR       = "#333333"
-
-    # === FRAME PRINCIPAL ===
-    main_frame = ctk.CTkFrame(root, fg_color=BACKGROUND_COLOR)
-    main_frame.pack(fill="both", expand=True)
+    # Variável do perfil selecionado
+    current_profile = ctk.StringVar(value=perfil)
 
     # === HEADER ===
-    header = ctk.CTkFrame(main_frame, fg_color=CARD_COLOR, corner_radius=0)
-    header.pack(fill="x")
-    header.grid_columnconfigure(0, weight=1)
-    header.grid_columnconfigure(1, weight=0)
-    header.grid_columnconfigure(2, weight=0)
-    header.grid_columnconfigure(3, weight=0)
+    header = ctk.CTkFrame(app, fg_color=BACKGROUND_COLOR, corner_radius=0)
+    header.pack(fill="x", padx=20, pady=10)
 
-    ctk.CTkLabel(
-        header,
-        text="🛍️ Loja Virtual",
-        text_color=PRIMARY_COLOR,
-        font=ctk.CTkFont(family="Segoe UI", size=24, weight="bold")
-    ).grid(row=0, column=0, sticky="w", padx=20, pady=15)
+    # LOGO
+    logo_frame = ctk.CTkFrame(header, fg_color=BACKGROUND_COLOR, corner_radius=0)
+    logo_frame.pack(side="left")
+    ctk.CTkLabel(logo_frame, text="🏬", font=("Segoe UI", 30), text_color=PRIMARY_COLOR, fg_color=BACKGROUND_COLOR).pack(side="left")
+    ctk.CTkLabel(logo_frame, text="SUPERMERCADO", font=("Segoe UI", 20, "bold"), text_color=TEXT_COLOR, fg_color=BACKGROUND_COLOR).pack(side="left", padx=(8,0))
 
-    entry_search = ctk.CTkEntry(
-        header,
-        placeholder_text="Buscar produto…",
-        width=180, height=36, corner_radius=8,
-        fg_color=BACKGROUND_COLOR,
-        text_color=TEXT_COLOR,
-        font=ctk.CTkFont(size=14)
-    )
-    entry_search.grid(row=0, column=1, sticky="e", padx=(0,5), pady=15)
+    # USUÁRIO E PERFIL
+    user_frame = ctk.CTkFrame(header, fg_color=BACKGROUND_COLOR, corner_radius=0)
+    user_frame.pack(side="right")
+    ctk.CTkLabel(user_frame, text=usuario, font=("Segoe UI", 12), text_color=TEXT_COLOR, fg_color=BACKGROUND_COLOR).pack(side="left", padx=(0,10))
+    
+    profile_combo = ctk.CTkLabel(user_frame, text=perfil, font=("Segoe UI", 12, "bold"), text_color=PRIMARY_COLOR, fg_color=BACKGROUND_COLOR)
+    profile_combo.pack(side="left", padx=(0,10))
 
-    btn_search = ctk.CTkButton(
-        header,
-        text="🔍",
-        width=48, height=36,
-        fg_color=PRIMARY_COLOR,
-        hover_color=HOVER_COLOR,
-        text_color="#FFFFFF",
-        corner_radius=8
-    )
-    btn_search.grid(row=0, column=2, sticky="e", padx=(5,5), pady=15)
+    # --- LOGOUT ---
+    def logout():
+        if messagebox.askyesno("Sair", "Deseja realmente sair?"):
+            loja.mostrar_login(app)
+    ctk.CTkButton(user_frame, text="Sair", command=logout, width=70).pack(side="left")
 
-    # === INTERRUPTOR MODO ESCURO ===
-    switch_tema = ctk.CTkSwitch(
-        header,
-        text="🌙 Escuro",
-        command = None
-    )
-    switch_tema.grid(row=0, column=3, padx=(10,20), pady=15)
+    # === ÁREA PRINCIPAL ===
+    container = ctk.CTkFrame(app, fg_color=BACKGROUND_COLOR, corner_radius=0)
+    container.pack(expand=True, fill="both", padx=20, pady=10)
 
-    # === DADOS INICIAIS ===
-    produtos = [
-        {"nome": "Arroz 5kg", "preco": 22.90},
-        {"nome": "Feijão 1kg", "preco": 8.50},
-        {"nome": "Óleo 900ml", "preco": 7.80},
-        {"nome": "Macarrão 500g", "preco": 4.20},
-        {"nome": "Café 250g", "preco": 9.90}
-    ]
-    carrinho = []
+    welcome_frame = ctk.CTkFrame(container, fg_color="white", corner_radius=10)
+    welcome_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
-    # === SEPARADOR ===
-    ctk.CTkFrame(main_frame, fg_color="#E0E0E0", height=1).pack(fill="x", padx=20)
+    # TÍTULO
+    ctk.CTkLabel(welcome_frame, text=f"Bem-vindo, {usuario}!", font=("Segoe UI", 32, "bold")).pack(pady=(20,0))
+    ctk.CTkLabel(welcome_frame, text="Escolha uma das opções:", font=("Segoe UI", 14)).pack(pady=(0,20))
 
-    # === ABA DE TABS ===
-    tabs = ctk.CTkTabview(
-        main_frame,
-        fg_color=BACKGROUND_COLOR,
-        segmented_button_selected_color=PRIMARY_COLOR,
-        segmented_button_selected_hover_color=HOVER_COLOR
-    )
-    tabs.pack(fill="both", expand=True, padx=20, pady=20)
-    tabs.add("Produtos")
-    tabs.add("Carrinho")
+    # === CARDS ===
+    cards_frame = ctk.CTkFrame(welcome_frame, fg_color="white", corner_radius=0)
+    cards_frame.pack(expand=True, fill="both", padx=20, pady=10)
+    cards_frame.grid_columnconfigure((0,1), weight=1)
+    cards_frame.grid_rowconfigure((0,1), weight=1)
 
-    # === FRAME PRODUTOS ===
-    produtos_frame = ctk.CTkScrollableFrame(
-        tabs.tab("Produtos"),
-        fg_color=BACKGROUND_COLOR,
-        corner_radius=0
-    )
-    produtos_frame.pack(fill="both", expand=True, padx=10, pady=(0,10))
+    # Criando os cards
+    card_caixa = Card(cards_frame, "Caixa", CARD_CAIXA_COLOR, "🛒", command=lambda name="Caixa": abrir_caixa(app))
+    card_caixa.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+    
+    card_estoque = Card(cards_frame, "Repositório", CARD_ESTOQUE_COLOR,"📦", command=lambda name="Repositório": abrir_modulo(app, name))
+    card_estoque.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+    
+    card_relatorios = Card(cards_frame, "Relatórios", CARD_RELATORIOS_COLOR, "📊", command=lambda name="Relatórios": abrir_modulo(app, name))
+    card_relatorios.grid(row=1, column=0, padx=20, pady=20, sticky="nsew")
+    
+    card_cadastros = Card(cards_frame, "Cadastros", CARD_CADASTROS_COLOR, "👥", command=lambda name="Cadastros": abrir_cadastros(app))
+    card_cadastros.grid(row=1, column=1, padx=20, pady=20, sticky="nsew")
 
-    form = ctk.CTkFrame(tabs.tab("Produtos"), fg_color=CARD_COLOR, corner_radius=12)
-    form.pack(fill="x", padx=10, pady=10)
+    cards = {
+        "Caixa": card_caixa,
+        "Repositório": card_estoque,
+        "Relatórios": card_relatorios,
+        "Cadastros": card_cadastros
+    }
 
-    entry_nome = ctk.CTkEntry(
-        form, placeholder_text="Nome do produto",
-        width=300, height=36, corner_radius=8,
-        fg_color=BACKGROUND_COLOR,
-        text_color=TEXT_COLOR,
-        font=ctk.CTkFont(size=14)
-    )
-    entry_nome.pack(side="left", padx=(20,10), pady=12)
+    # Bloqueia todos inicialmente
+    for card in cards.values():
+        card.set_locked(True)
 
-    entry_preco = ctk.CTkEntry(
-        form, placeholder_text="Preço (ex: 10.99)",
-        width=150, height=36, corner_radius=8,
-        fg_color=BACKGROUND_COLOR,
-        text_color=TEXT_COLOR,
-        font=ctk.CTkFont(size=14)
-    )
-    entry_preco.pack(side="left", padx=(0,10), pady=12)
+    # Atualiza permissões ao selecionar perfil
+    profile_combo.bind("<<ComboboxSelected>>", lambda e: aplicar_permissoes(cards, current_profile.get()))
 
-    def adicionar_produto():
-        nome = entry_nome.get().strip()
-        preco = entry_preco.get().replace(",", ".").strip()
-        if not nome or not preco:
-            messagebox.showwarning("Atenção", "Preencha nome e preço válidos.")
-            return
-        try:
-            valor = float(preco)
-        except ValueError:
-            messagebox.showerror("Erro", "Formato de preço inválido.")
-            return
-        produtos.append({"nome": nome, "preco": valor})
-        entry_nome.delete(0, "end")
-        entry_preco.delete(0, "end")
-        atualizar_lista_produtos()
-        messagebox.showinfo("Sucesso", f"Produto '{nome}' adicionado.")
-
-    btn_add_prod = ctk.CTkButton(
-        form,
-        text="➕ Adicionar produto",
-        width=160, height=36,
-        fg_color=PRIMARY_COLOR,
-        hover_color=HOVER_COLOR,
-        text_color="#FFFFFF",
-        corner_radius=10,
-        font=ctk.CTkFont(size=14),
-        command=adicionar_produto
-    )
-    btn_add_prod.pack(side="right", padx=(10,20), pady=12)
-
-    # === FUNÇÕES DE ATUALIZAÇÃO ===
-    def atualizar_lista_produtos():
-        term = entry_search.get().lower().strip()
-        for w in produtos_frame.winfo_children():
-            w.destroy()
-        for prod in produtos:
-            if term and term not in prod["nome"].lower():
-                continue
-            card = ctk.CTkFrame(produtos_frame, fg_color=CARD_COLOR, corner_radius=12)
-            card.pack(fill="x", pady=8, padx=8)
-            ctk.CTkLabel(
-                card,
-                text=f"{prod['nome']}  —  R$ {prod['preco']:.2f}",
-                text_color=TEXT_COLOR,
-                font=ctk.CTkFont(size=16, weight="bold")
-            ).pack(side="left", padx=20, pady=15)
-            ctk.CTkButton(
-                card,
-                text="➕ Adicionar",
-                width=120, height=36,
-                fg_color=PRIMARY_COLOR,
-                hover_color=HOVER_COLOR,
-                text_color="#FFFFFF",
-                corner_radius=10,
-                font=ctk.CTkFont(size=14),
-                command=lambda p=prod: adicionar_ao_carrinho(p)
-            ).pack(side="right", padx=20)
-
-    carrinho_frame = ctk.CTkScrollableFrame(
-        tabs.tab("Carrinho"),
-        fg_color=BACKGROUND_COLOR,
-        corner_radius=0
-    )
-    carrinho_frame.pack(fill="both", expand=True, padx=10, pady=(10,0))
-
-    def atualizar_carrinho():
-        for w in carrinho_frame.winfo_children():
-            w.destroy()
-        if not carrinho:
-            ctk.CTkLabel(
-                carrinho_frame,
-                text="Seu carrinho está vazio",
-                text_color=TEXT_COLOR,
-                font=ctk.CTkFont(size=16)
-            ).pack(pady=20)
-            return
-        total = 0.0
-        for prod in carrinho:
-            total += prod["preco"]
-            card = ctk.CTkFrame(carrinho_frame, fg_color=CARD_COLOR, corner_radius=12)
-            card.pack(fill="x", pady=8, padx=8)
-            ctk.CTkLabel(
-                card,
-                text=f"{prod['nome']} — R$ {prod['preco']:.2f}",
-                text_color=TEXT_COLOR,
-                font=ctk.CTkFont(size=15)
-            ).pack(side="left", padx=20, pady=12)
-            ctk.CTkButton(
-                card,
-                text="🗑️ Remover",
-                width=120, height=36,
-                fg_color="#D32F2F",
-                hover_color="#B71C1C",
-                text_color="#FFFFFF",
-                corner_radius=10,
-                font=ctk.CTkFont(size=14),
-                command=lambda p=prod: remover_do_carrinho(p)
-            ).pack(side="right", padx=20)
-        ctk.CTkLabel(
-            carrinho_frame,
-            text=f"🧾 Total: R$ {total:.2f}",
-            text_color=PRIMARY_COLOR,
-            font=ctk.CTkFont(size=18, weight="bold")
-        ).pack(pady=20)
-
-    def adicionar_ao_carrinho(prod):
-        carrinho.append(prod)
-        atualizar_carrinho()
-
-    def remover_do_carrinho(prod):
-        if prod in carrinho:
-            carrinho.remove(prod)
-        atualizar_carrinho()
-
-    # Botão de finalizar compra
-    btn_finalizar = ctk.CTkButton(
-        tabs.tab("Carrinho"),
-        text="✅ Finalizar compra",
-        width=200, height=44,
-        fg_color=PRIMARY_COLOR,
-        hover_color=HOVER_COLOR,
-        text_color="#FFFFFF",
-        corner_radius=12,
-        font=ctk.CTkFont(size=16, weight="bold"),
-        command=lambda: (
-            messagebox.showinfo(
-                "Compra concluída",
-                f"Total pago: R$ {sum(p['preco'] for p in carrinho):.2f}"
-            ),
-            carrinho.clear(),
-            atualizar_carrinho()
-        )
-    )
-    btn_finalizar.pack(pady=20)
-
-    # Bind de busca
-    entry_search.bind("<KeyRelease>", lambda e: atualizar_lista_produtos())
-    btn_search.configure(command=atualizar_lista_produtos)
-
-    # Inicializa listas
-    atualizar_lista_produtos()
-    atualizar_carrinho()
+    # Aplica permissões iniciais
+    aplicar_permissoes(cards, current_profile.get())
