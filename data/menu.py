@@ -67,7 +67,7 @@ def aplicar_permissoes(cards, profile_name):
 
 # --- FUNÇÕES DE ABERTURA DE MÓDULOS ---
 def abrir_caixa(app):
-    caixa.abrir_caixa(app)
+    caixa.mostrar_menu(app)
 
 def abrir_cadastros(app):
     cadastro.abrir_cadastro(app)
@@ -83,8 +83,16 @@ def abrir_modulo(app, module_name):
     ctk.CTkLabel(win, text="Função em Desenvolvimento", font=("Segoe UI", 12), justify="center").pack(pady=8)
     ctk.CTkButton(win, text="Fechar", command=win.destroy).pack(side="bottom", pady=18)
 
+
+
+
+
+
+
+
+
 # === FUNÇÃO PRINCIPAL PARA MOSTRAR O MENU ===
-def mostrar_menu(app, usuario, perfil="Administrador"):
+def mostrar_menu(app, usuario, perfil=""):
     for w in app.winfo_children():
         w.destroy()
 

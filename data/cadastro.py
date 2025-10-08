@@ -49,4 +49,4 @@ def abrir_cadastro(app):
         fg_color="#E98C41",
         hover_color="#E98C41",
         command=lambda: messagebox.showinfo("Sucesso", f"Usuário '{entry_user_cad.get()}' cadastrado!") and fechar_cadastro()
-).pack(pady=20)
+        ).pack(pady=20)

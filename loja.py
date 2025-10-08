@@ -95,6 +95,7 @@ def mostrar_login(app):
     ctk.CTkButton(login_container, text="Entrar", font=("Arial", 15, "bold"),
                   width=300, height=45, corner_radius=10,
                   fg_color="#E98C41", hover_color="#E2B539", command=on_login).pack(pady=8)
+    
 
     # BOTÃO CADASTRO
     def abrir_cadastro():
@@ -130,18 +131,51 @@ def mostrar_login(app):
     # LINKS DO RODAPÉ
     def abrir_politica():
         win = ctk.CTkToplevel(app)
-        win.title("Política de Privacidade")
+        win.title("Políticas de Privacidade")
         ctk.CTkLabel(win, text="Política de Privacidade", font=("Arial", 20, "bold")).pack(pady=20)
+        largura, altura =900, 600
+        win.geometry(f"{largura}x{altura}")
+        win.transient(app)  
+        win.grab_set()
+        app_x = app.winfo_x()
+        app_y = app.winfo_y()
+        app_largura = app.winfo_width()
+        app_altura = app.winfo_height()
+        x = app_x + (app_largura // 2) - (largura // 2)
+        y = app_y + (app_altura // 2) - (altura // 2)
+        win.geometry(f"{largura}x{altura}+{x}+{y}")
 
     def abrir_suporte():
         win = ctk.CTkToplevel(app)
         win.title("Suporte")
         ctk.CTkLabel(win, text="Suporte", font=("Arial", 20, "bold")).pack(pady=20)
+        largura, altura =900, 600
+        win.geometry(f"{largura}x{altura}")
+        win.transient(app)  
+        win.grab_set()
+        app_x = app.winfo_x()
+        app_y = app.winfo_y()
+        app_largura = app.winfo_width()
+        app_altura = app.winfo_height()
+        x = app_x + (app_largura // 2) - (largura // 2)
+        y = app_y + (app_altura // 2) - (altura // 2)
+        win.geometry(f"{largura}x{altura}+{x}+{y}")
 
     def abrir_ajuda():
         win = ctk.CTkToplevel(app)
-        win.title("Suporte")
+        win.title("Ajuda")
         ctk.CTkLabel(win, text="Suporte", font=("Arial", 20, "bold")).pack(pady=20)
+        largura, altura =900, 600
+        win.geometry(f"{largura}x{altura}")  
+        win.transient(app)  
+        win.grab_set()
+        app_x = app.winfo_x()
+        app_y = app.winfo_y()
+        app_largura = app.winfo_width()
+        app_altura = app.winfo_height()
+        x = app_x + (app_largura // 2) - (largura // 2)
+        y = app_y + (app_altura // 2) - (altura // 2)
+        win.geometry(f"{largura}x{altura}+{x}+{y}")
 
     links = [("Políticas", abrir_politica),
              ("Suporte", abrir_suporte),
