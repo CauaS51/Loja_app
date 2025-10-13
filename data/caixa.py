@@ -2,6 +2,8 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from PIL import Image
+import data.colors as colors
+import data.sessao as sessao
 
 # === TELA DO CAIXA / LOJA ===
 class LojaApp:
@@ -20,35 +22,16 @@ class LojaApp:
             {"nome": "Banana (por kg)", "preco": 6.50, "img": "imagens/banana.png"},
         ]
         self.carrinho = {}
-        self.modo_escuro = True
+        self.modo_escuro = False
         self.imagens_cache = {}
 
         self.carregar_imagens()
         self.mostrar_tela()
 
     # === CORES ===
-    def get_colors(self):
-        if self.modo_escuro:
-            return {
-                "PRIMARY": "#FF7043",
-                "HOVER": "#FF5722",
-                "BACKGROUND": "#121212",
-                "CARD_BG": "#1E1E1E",
-                "TEXT_PRIMARY": "white",
-                "TEXT_SECONDARY": "#BBBBBB",
-                "ENTRY_BG": "#333333",
-            }
-        else:
-            return {
-                "PRIMARY": "#FF7043",
-                "HOVER": "#FF5722",
-                "BACKGROUND": "#F5F5F5",
-                "CARD_BG": "#FFFFFF",
-                "TEXT_PRIMARY": "black",
-                "TEXT_SECONDARY": "#666666",
-                "ENTRY_BG": "#E0E0E0",
-            }
-
+    def get_colors(app):
+        return colors.get_colors(app)
+    
     # === CARREGAR IMAGENS ===
     def carregar_imagens(self):
         for produto in self.produtos:
@@ -81,6 +64,14 @@ class LojaApp:
         header.grid_columnconfigure(1, weight=0)
         header.grid_columnconfigure(2, weight=0)
 
+        # Botão voltar ao menu
+        btn_voltar = ctk.CTkButton(
+            header, text="⬅ Voltar", width=80, height=40,
+            corner_radius=12, fg_color="#333", hover_color=cores["HOVER"],
+            command=lambda: self.voltar_menu()
+        )
+        btn_voltar.place(relx=0.9, rely=0.5, anchor="center")
+        
         title_label = ctk.CTkLabel(
             header, text="🛒 Caixa / Loja", text_color="white",
             font=ctk.CTkFont("Segoe UI", 26, "bold")
@@ -102,14 +93,6 @@ class LojaApp:
             font=ctk.CTkFont(size=20), command=self.alternar_tema
         )
         theme_button.grid(row=0, column=2, padx=30, pady=20)
-
-        # Botão voltar ao menu
-        btn_voltar = ctk.CTkButton(
-            header, text="⬅ Voltar", width=80, height=40,
-            corner_radius=12, fg_color="#333", hover_color=cores["HOVER"],
-            command=lambda: self.voltar_menu()
-        )
-        btn_voltar.place(relx=0.9, rely=0.5, anchor="center")
 
         # Tabs
         tabs = ctk.CTkTabview(self.app,
@@ -149,7 +132,7 @@ class LojaApp:
     # === VOLTAR PARA MENU PRINCIPAL ===
     def voltar_menu(self):
         from data import menu
-        menu.mostrar_menu(self.app, usuario="Usuário", perfil="Caixa")
+        menu.mostrar_menu(self.app,usuario=sessao.usuario,perfil=sessao.perfil)
 
     # === LÓGICA DA LOJA ===
     def adicionar_ao_carrinho(self, produto, qtd_str):
@@ -216,7 +199,7 @@ class LojaApp:
             ctk.CTkLabel(card, text=f"R$ {prod['preco']:.2f}", font=ctk.CTkFont(size=14),
                          text_color=cores["TEXT_SECONDARY"]).place(relx=info_x, rely=0.55, anchor="w")
             entry_qtd = ctk.CTkEntry(card, width=60, height=32, corner_radius=10, placeholder_text="kg/un")
-            entry_qtd.insert(0, "1.0")
+            entry_qtd.insert(0, "1")
             entry_qtd.place(relx=0.25, rely=0.75, anchor="w")
             ctk.CTkButton(
                 card, text="➕ Adicionar", width=120, height=35,

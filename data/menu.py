@@ -1,9 +1,11 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from data.colors import *
+import data.sessao as sessao
 import loja
 import data.caixa as caixa
 import data.cadastro as cadastro
+
 
 # === PERFIS ===
 PROFILES = {
@@ -83,16 +85,8 @@ def abrir_modulo(app, module_name):
     ctk.CTkLabel(win, text="Função em Desenvolvimento", font=("Segoe UI", 12), justify="center").pack(pady=8)
     ctk.CTkButton(win, text="Fechar", command=win.destroy).pack(side="bottom", pady=18)
 
-
-
-
-
-
-
-
-
 # === FUNÇÃO PRINCIPAL PARA MOSTRAR O MENU ===
-def mostrar_menu(app, usuario, perfil=""):
+def mostrar_menu(app, usuario, perfil):
     for w in app.winfo_children():
         w.destroy()
 
@@ -127,6 +121,8 @@ def mostrar_menu(app, usuario, perfil=""):
     # --- LOGOUT ---
     def logout():
         if messagebox.askyesno("Sair", "Deseja realmente sair?"):
+            sessao.usuario = None
+            sessao.perfil = None
             loja.mostrar_login(app)
     ctk.CTkButton(user_frame, text="Sair", command=logout, width=70).pack(side="left")
 

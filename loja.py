@@ -4,13 +4,13 @@ from tkinter import messagebox
 from data.colors import *
 import data.menu as menu
 import data.cadastro as cadastro
-
+import data.sessao as sessao
 
 # === CONFIGURAÇÃO INICIAL ===
 def mostrar_login(app):
     for w in app.winfo_children():
         w.destroy()
-
+    
     ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")
 
@@ -20,8 +20,11 @@ def mostrar_login(app):
     app.grid_columnconfigure(0, weight=1)  # lado esquerdo maior
     app.grid_columnconfigure(1, weight=1)  # lado direito menor
 
-    # === FRAME ESQUERDA (LOGIN) ===
-    frame_left = ctk.CTkFrame(app, corner_radius=0, fg_color="#F5F5F5")
+    # CORES
+    cores = get_colors()
+
+    # === FRAME ESQUERDA ===
+    frame_left = ctk.CTkFrame(app, corner_radius=0, fg_color=cores["BACKGROUND"])
     frame_left.grid(row=0, column=0, sticky="nsew")
     frame_left.grid_rowconfigure(0, weight=1)
     frame_left.grid_rowconfigure(1, weight=2)
@@ -63,39 +66,25 @@ def mostrar_login(app):
             messagebox.showwarning("Atenção", "Informe usuário e senha.")
             return
     
-    # --- USUÁRIOS FIXOS PARA TESTE ---
-        elif user == "DEV" and pwd != "123":
-            menu.mostrar_menu(app, usuario="DEV", perfil="Desenvolvedor")
-        
-        elif user == "Cauã" and pwd == "123":
-            menu.mostrar_menu(app, usuario="Cauã", perfil="Desenvolvedor")
+    # VERIFICA SE O USUÁRIO ESTÁ CADASTRADO
+        if user in sessao.USUARIOS_FIXOS:
+            info = sessao.USUARIOS_FIXOS[user]
+            if pwd == info["senha"]:
+                # Salva o usuário atual na sessão
+                sessao.usuario = user
+                sessao.perfil = info["perfil"]
 
-        elif user == "Isaac" and pwd == "123":
-            menu.mostrar_menu(app, usuario="Isaac", perfil="Desenvolvedor")
-        
-        elif user == "Lucas" and pwd == "123":
-            menu.mostrar_menu(app, usuario="Lucas", perfil="Desenvolvedor")
-
-        elif user == "Romulo" and pwd == "123":
-            menu.mostrar_menu(app, usuario="Romulo", perfil="Desenvolvedor")
-        
-        elif user == "Caixa" and pwd == "123":
-            menu.mostrar_menu(app, usuario="Caixa", perfil="Caixa")
-        
-        elif user == "Reposição" and pwd == "123":
-            menu.mostrar_menu(app, usuario="Reposição", perfil="Reposição")
-        
-        elif user == "Admin" and pwd == "123":
-            menu.mostrar_menu(app, usuario="Admin", perfil="Administração")       
-
+                menu.mostrar_menu(app, usuario=user, perfil=info["perfil"])
+            else:
+                messagebox.showerror("Erro", "Senha incorreta.")
         else:
-            menu.mostrar_menu(app, usuario=user, perfil="Caixa")
-
+            # Usuário não encontrado → padrão “Caixa”
+            messagebox.showerror("Erro","Usuário não Cadastrado")
+    
     # BOTÃO LOGIN        
     ctk.CTkButton(login_container, text="Entrar", font=("Arial", 15, "bold"),
                   width=300, height=45, corner_radius=10,
                   fg_color="#E98C41", hover_color="#E2B539", command=on_login).pack(pady=8)
-    
 
     # BOTÃO CADASTRO
     def abrir_cadastro():
@@ -106,7 +95,7 @@ def mostrar_login(app):
                   border_width=2, border_color="#E98C41", text_color="#E98C41",
                   command=abrir_cadastro).pack(pady=8)
 
-    # === FRAME DIREITA (LOGO) ===
+    # === FRAME DIREITA ===
     frame_right = ctk.CTkFrame(app, corner_radius=0, fg_color="#E98C41")
     frame_right.grid(row=0, column=1, sticky="nsew")
     frame_right.grid_rowconfigure(0, weight=1)  # espaço acima do logo
@@ -114,12 +103,13 @@ def mostrar_login(app):
     frame_right.grid_rowconfigure(2, weight=1)  # espaço abaixo do logo
     frame_right.grid_columnconfigure(0, weight=1)
 
+    # LOGO
     logo_image = ctk.CTkImage(light_image=Image.open("images/logo_loja.png"),
                               dark_image=Image.open("images/logo_loja.png"),
                               size=(400, 330))
     ctk.CTkLabel(frame_right, image=logo_image, text="").grid(row=1, column=0)
 
-    # RODAPÉ
+    # === RODAPÉ ===
     frame_footer = ctk.CTkFrame(frame_right, corner_radius=0, fg_color="#E98C41", height=80)
     frame_footer.grid(row=2, column=0, sticky="ew")
     frame_footer.grid_propagate(False)
