@@ -2,6 +2,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from PIL import Image
+from data.colors import *
 import data.colors as colors
 import data.sessao as sessao
 
@@ -22,7 +23,6 @@ class LojaApp:
             {"nome": "Banana (por kg)", "preco": 6.50, "img": "imagens/banana.png"},
         ]
         self.carrinho = {}
-        self.modo_escuro = False
         self.imagens_cache = {}
 
         self.carregar_imagens()
@@ -30,7 +30,7 @@ class LojaApp:
 
     # === CORES ===
     def get_colors(app):
-        return colors.get_colors(app)
+        return get_colors(app)
     
     # === CARREGAR IMAGENS ===
     def carregar_imagens(self):
@@ -49,20 +49,32 @@ class LojaApp:
         ctk.set_appearance_mode("dark" if self.modo_escuro else "light")
         self.mostrar_tela()
 
+
+
+
+
+
+
+
+
+
+
+
     # === MONTAR INTERFACE ===
     def mostrar_tela(self):
         for w in self.app.winfo_children():
             w.destroy()
 
-        cores = self.get_colors()
-        self.app.configure(fg_color=cores["BACKGROUND"])
-
-        # Header
+        # HEADER
         header = ctk.CTkFrame(self.app, fg_color=cores["PRIMARY"], height=80, corner_radius=0)
         header.pack(fill="x")
         header.grid_columnconfigure(0, weight=1)
         header.grid_columnconfigure(1, weight=0)
         header.grid_columnconfigure(2, weight=0)
+
+        # CORES
+        cores = self.get_colors()
+        self.app.configure(fg_color=cores["BACKGROUND"])
 
         # Botão voltar ao menu
         btn_voltar = ctk.CTkButton(

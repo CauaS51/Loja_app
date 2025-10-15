@@ -18,7 +18,7 @@ def get_colors():
         return {
             "PRIMARY": "#FF7043",
             "HOVER": "#FF5722",
-            "BACKGROUND": "#121212",
+            "BACKGROUND": "#2C2C2C",
             "CARD_BG": "#1E1E1E",
             "TEXT_PRIMARY": "WHITE",
             "TEXT_SECONDARY": "#BBBBBB",
@@ -34,3 +34,10 @@ def get_colors():
             "TEXT_SECONDARY": "#666666",
             "ENTRY_BG": "#E0E0E0",
         }
+    
+def alternar_tema():
+    modo_atual = ctk.get_appearance_mode()
+    if modo_atual == "Dark":
+        ctk.set_appearance_mode("Light")
+    else:
+        ctk.set_appearance_mode("Dark")

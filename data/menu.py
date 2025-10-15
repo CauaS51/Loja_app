@@ -1,11 +1,11 @@
 import customtkinter as ctk
 from tkinter import messagebox
+import data.colors as colors
 from data.colors import *
 import data.sessao as sessao
 import loja
 import data.caixa as caixa
 import data.cadastro as cadastro
-
 
 # === PERFIS ===
 PROFILES = {
@@ -90,7 +90,6 @@ def mostrar_menu(app, usuario, perfil):
     for w in app.winfo_children():
         w.destroy()
 
-    ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")
 
     app.geometry("1200x700")
@@ -101,8 +100,8 @@ def mostrar_menu(app, usuario, perfil):
     current_profile = ctk.StringVar(value=perfil)
 
     # === HEADER ===
-    header = ctk.CTkFrame(app, fg_color=BACKGROUND_COLOR, corner_radius=0)
-    header.pack(fill="x", padx=20, pady=10)
+    header = ctk.CTkFrame(app, fg_color=BACKGROUND_COLOR, corner_radius=15)
+    header.pack(fill="x", padx=20, pady=20)
 
     # LOGO
     logo_frame = ctk.CTkFrame(header, fg_color=BACKGROUND_COLOR, corner_radius=0)
@@ -124,7 +123,7 @@ def mostrar_menu(app, usuario, perfil):
             sessao.usuario = None
             sessao.perfil = None
             loja.mostrar_login(app)
-    ctk.CTkButton(user_frame, text="Sair", command=logout, width=70).pack(side="left")
+    ctk.CTkButton(user_frame, text="Sair", command=logout, width=70).pack(padx=10,side="left")
 
     # === ÁREA PRINCIPAL ===
     container = ctk.CTkFrame(app, fg_color=BACKGROUND_COLOR, corner_radius=0)

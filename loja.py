@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from PIL import Image
 from tkinter import messagebox
+import data.colors as colors
 from data.colors import *
 import data.menu as menu
 import data.cadastro as cadastro
@@ -11,7 +12,6 @@ def mostrar_login(app):
     for w in app.winfo_children():
         w.destroy()
     
-    ctk.set_appearance_mode("light")
     ctk.set_default_color_theme("blue")
 
     # CONFIGURAÇÃO GRID PRINCIPAL
@@ -37,18 +37,18 @@ def mostrar_login(app):
 
     # TÍTULOS
     ctk.CTkLabel(login_container, text="🏬 SUPERMERCADO", font=("Comfortaa", 35, "bold"),
-                 text_color="#3A3A3A").pack(pady=(50,50))
+                 text_color=cores["TEXT_PRIMARY"]).pack(pady=(50,50))
     ctk.CTkLabel(login_container, text="BEM VINDO!", font=("Comfortaa", 40, "bold"),
-                 text_color="#3A3A3A").pack(pady=(0,10), padx=(0,60))
+                 text_color=cores["TEXT_PRIMARY"]).pack(pady=(0,10), padx=(0,60))
     ctk.CTkLabel(login_container, text="Gerencie sua loja de forma prática e rápida",
-                 font=("Arial", 16,"bold"), text_color="#3A3A3A").pack(pady=(0,10), padx=(30,0))
+                 font=("Arial", 16,"bold"), text_color=cores["TEXT_PRIMARY"]).pack(pady=(0,10), padx=(30,0))
 
     # CAMPOS
     entry_user = ctk.CTkEntry(login_container, placeholder_text="👤 Usuário", font=("Arial", 14,"bold"),
-                              placeholder_text_color="#3A3A3A", width=300, height=45, corner_radius=10)
+                              placeholder_text_color=cores["TEXT_PRIMARY"], width=300, height=45, corner_radius=10)
     entry_user.pack(pady=8)
     entry_pass = ctk.CTkEntry(login_container, placeholder_text="🔒 Senha", font=("Arial", 14,"bold"),
-                              placeholder_text_color="#3A3A3A", show="*", width=300, height=45, corner_radius=10)
+                              placeholder_text_color=cores["TEXT_PRIMARY"], show="*", width=300, height=45, corner_radius=10)
     entry_pass.pack(pady=8)
 
     # BOTÃO ESQUECI MINHA SENHA
@@ -56,7 +56,7 @@ def mostrar_login(app):
         print("A opção 'Esqueci minha senha' foi clicada!")
     ctk.CTkButton(login_container, text="Esqueceu sua senha?", fg_color="transparent",
                   hover_color="#E8E8E8", font=("Segoe UI", 13,"bold"),
-                  text_color="#3A3A3A", command=esqueci_senha).pack(pady=(5,15), padx=(0,175))
+                  text_color=cores["TEXT_PRIMARY"], command=esqueci_senha).pack(pady=(5,15), padx=(0,175))
 
     # --- FUNÇÃO LOGIN ---
     def on_login():
@@ -102,6 +102,27 @@ def mostrar_login(app):
     frame_right.grid_rowconfigure(1, weight=1)  # logo
     frame_right.grid_rowconfigure(2, weight=1)  # espaço abaixo do logo
     frame_right.grid_columnconfigure(0, weight=1)
+
+    # === FUNÇÃO PARA ALTERNAR ENTRE MODO CLARO/ESCURO ===
+    def alternar_tema():
+        colors.alternar_tema()
+        mostrar_login(app)
+
+    # === BOTÃO ALTERNAR TEMA ===
+    icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "☀️"
+    theme_button = ctk.CTkButton(
+        frame_right, 
+        text=icone_tema, 
+        width=30, 
+        height=40,
+        corner_radius=12, 
+        fg_color=cores["ENTRY_BG"],
+        hover_color=cores["HOVER"], 
+        text_color=cores["TEXT_PRIMARY"],
+        font=ctk.CTkFont(size=20), 
+        command=alternar_tema
+        )
+    theme_button.grid(row=0, column=0, padx=20, pady=20, sticky="ne") 
 
     # LOGO
     logo_image = ctk.CTkImage(light_image=Image.open("images/logo_loja.png"),
