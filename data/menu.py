@@ -90,31 +90,31 @@ def mostrar_menu(app, usuario, perfil):
     for w in app.winfo_children():
         w.destroy()
 
-    ctk.set_default_color_theme("blue")
-
-    app.geometry("1200x700")
-    app.minsize(900, 500)
+    # NOME JANELA
     app.title("Menu Inicial")
 
-    # Variável do perfil selecionado
+    # CORES
+    cores = get_colors()
+
+    # VARIÁVEL DO PERFIL SELECIONADO
     current_profile = ctk.StringVar(value=perfil)
 
     # === HEADER ===
-    header = ctk.CTkFrame(app, fg_color=BACKGROUND_COLOR, corner_radius=15)
+    header = ctk.CTkFrame(app, fg_color=cores["BACKGROUND_2"], corner_radius=15)
     header.pack(fill="x", padx=20, pady=20)
 
     # LOGO
-    logo_frame = ctk.CTkFrame(header, fg_color=BACKGROUND_COLOR, corner_radius=0)
-    logo_frame.pack(side="left")
-    ctk.CTkLabel(logo_frame, text="🏬", font=("Segoe UI", 30), text_color=PRIMARY_COLOR, fg_color=BACKGROUND_COLOR).pack(side="left")
-    ctk.CTkLabel(logo_frame, text="SUPERMERCADO", font=("Segoe UI", 20, "bold"), text_color=TEXT_COLOR, fg_color=BACKGROUND_COLOR).pack(side="left", padx=(8,0))
+    logo_frame = ctk.CTkFrame(header, fg_color=cores["BACKGROUND_2"], corner_radius=5)
+    logo_frame.pack(side="left", padx=50, pady=(0,5))
+    ctk.CTkLabel(logo_frame, text="🏬", font=("Segoe UI", 50), text_color=cores["TEXT_PRIMARY"], fg_color=cores["BACKGROUND_2"]).pack(side="left", padx=(10,0))
+    ctk.CTkLabel(logo_frame, text="SUPERMERCADO", font=("Segoe UI", 20, "bold"), text_color=cores["TEXT_PRIMARY"], fg_color=cores["BACKGROUND_2"]).pack(side="left", padx=(10,10))
 
     # USUÁRIO E PERFIL
-    user_frame = ctk.CTkFrame(header, fg_color=BACKGROUND_COLOR, corner_radius=0)
-    user_frame.pack(side="right")
-    ctk.CTkLabel(user_frame, text=usuario, font=("Segoe UI", 12), text_color=TEXT_COLOR, fg_color=BACKGROUND_COLOR).pack(side="left", padx=(0,10))
+    user_frame = ctk.CTkFrame(header, fg_color=cores["BACKGROUND_2"], height=80, corner_radius=0)
+    user_frame.pack(side="right", padx=30)
+    ctk.CTkLabel(user_frame, text=usuario, font=("Segoe UI", 14), text_color=cores["TEXT_PRIMARY"], fg_color=cores["BACKGROUND_2"]).pack(side="left", padx=(0,10))
     
-    profile_combo = ctk.CTkLabel(user_frame, text=perfil, font=("Segoe UI", 12, "bold"), text_color=PRIMARY_COLOR, fg_color=BACKGROUND_COLOR)
+    profile_combo = ctk.CTkLabel(user_frame, text=perfil, font=("Segoe UI", 14, "bold"), text_color=cores["PRIMARY"], fg_color=cores["BACKGROUND_2"])
     profile_combo.pack(side="left", padx=(0,10))
 
     # --- LOGOUT ---
@@ -123,21 +123,21 @@ def mostrar_menu(app, usuario, perfil):
             sessao.usuario = None
             sessao.perfil = None
             loja.mostrar_login(app)
-    ctk.CTkButton(user_frame, text="Sair", command=logout, width=70).pack(padx=10,side="left")
+    ctk.CTkButton(user_frame, text="Sair", command=logout, width=70).pack(padx=(10,10),side="left")
 
     # === ÁREA PRINCIPAL ===
-    container = ctk.CTkFrame(app, fg_color=BACKGROUND_COLOR, corner_radius=0)
+    container = ctk.CTkFrame(app, fg_color=cores["BACKGROUND_2"], corner_radius=10)
     container.pack(expand=True, fill="both", padx=20, pady=10)
 
-    welcome_frame = ctk.CTkFrame(container, fg_color="white", corner_radius=10)
+    welcome_frame = ctk.CTkFrame(container, fg_color=cores["BACKGROUND"], corner_radius=10)
     welcome_frame.pack(expand=True, fill="both", padx=10, pady=10)
 
     # TÍTULO
-    ctk.CTkLabel(welcome_frame, text=f"Bem-vindo, {usuario}!", font=("Segoe UI", 32, "bold")).pack(pady=(20,0))
-    ctk.CTkLabel(welcome_frame, text="Escolha uma das opções:", font=("Segoe UI", 14)).pack(pady=(0,20))
+    ctk.CTkLabel(welcome_frame, text=f"Bem-vindo, {usuario}!", text_color=cores["TEXT_PRIMARY"], font=("Segoe UI", 32, "bold")).pack(pady=(20,0))
+    ctk.CTkLabel(welcome_frame, text="Escolha uma das opções:",text_color=cores["TEXT_PRIMARY"],  font=("Segoe UI", 14)).pack(pady=(0,20))
 
     # === CARDS ===
-    cards_frame = ctk.CTkFrame(welcome_frame, fg_color="white", corner_radius=0)
+    cards_frame = ctk.CTkFrame(welcome_frame, fg_color=cores["BACKGROUND"], corner_radius=10)
     cards_frame.pack(expand=True, fill="both", padx=20, pady=10)
     cards_frame.grid_columnconfigure((0,1), weight=1)
     cards_frame.grid_rowconfigure((0,1), weight=1)

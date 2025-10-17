@@ -6,7 +6,8 @@ from data.colors import *
 import data.colors as colors
 import data.sessao as sessao
 
-# === TELA DO CAIXA / LOJA ===
+
+# === CLASSE PRINCIPAL ===
 class LojaApp:
     def __init__(self, app):
         self.app = app
@@ -28,10 +29,13 @@ class LojaApp:
         self.carregar_imagens()
         self.mostrar_tela()
 
-    # === CORES ===
-    def get_colors(app):
-        return get_colors(app)
-    
+    # === ALTERNAR TEMA ===
+    def alternar_tema(self):
+        modo_atual = ctk.get_appearance_mode()
+        novo_modo = "Light" if modo_atual == "Dark" else "Dark"
+        ctk.set_appearance_mode(novo_modo)
+        self.mostrar_tela()
+
     # === CARREGAR IMAGENS ===
     def carregar_imagens(self):
         for produto in self.produtos:
@@ -42,17 +46,6 @@ class LojaApp:
                 )
             except:
                 self.imagens_cache[produto["nome"]] = None
-
-    # === ALTERAR TEMA ===
-    def alternar_tema(self):
-        self.modo_escuro = not self.modo_escuro
-        ctk.set_appearance_mode("dark" if self.modo_escuro else "light")
-        self.mostrar_tela()
-
-
-
-
-
 
 
 
@@ -65,59 +58,71 @@ class LojaApp:
         for w in self.app.winfo_children():
             w.destroy()
 
-        # HEADER
+        self.app.title("Caixa")
+        cores = get_colors()
+        self.app.configure(fg_color=cores["BACKGROUND"])
+
+        # === HEADER ===
         header = ctk.CTkFrame(self.app, fg_color=cores["PRIMARY"], height=80, corner_radius=0)
         header.pack(fill="x")
         header.grid_columnconfigure(0, weight=1)
         header.grid_columnconfigure(1, weight=0)
         header.grid_columnconfigure(2, weight=0)
 
-        # CORES
-        cores = self.get_colors()
-        self.app.configure(fg_color=cores["BACKGROUND"])
-
-        # Botão voltar ao menu
-        btn_voltar = ctk.CTkButton(
-            header, text="⬅ Voltar", width=80, height=40,
-            corner_radius=12, fg_color="#333", hover_color=cores["HOVER"],
-            command=lambda: self.voltar_menu()
-        )
-        btn_voltar.place(relx=0.9, rely=0.5, anchor="center")
-        
+        # Título
         title_label = ctk.CTkLabel(
-            header, text="🛒 Caixa / Loja", text_color="white",
+            header, text="🛒 Caixa / Loja",
+            text_color="white",
             font=ctk.CTkFont("Segoe UI", 26, "bold")
         )
         title_label.grid(row=0, column=0, padx=30, pady=20, sticky="w")
 
+        # Campo de busca
         self.entry_search = ctk.CTkEntry(
-            header, placeholder_text="🔍 Buscar produto...",
+            header,
+            placeholder_text="🔍 Buscar produto...",
             width=250, height=40, corner_radius=12,
             fg_color=cores["ENTRY_BG"], text_color=cores["TEXT_PRIMARY"]
         )
         self.entry_search.grid(row=0, column=1, padx=10, pady=20)
 
-        icone_tema = "🌙" if self.modo_escuro else "☀️"
+        # Botão alternar tema
+        icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "🔆"
         theme_button = ctk.CTkButton(
-            header, text=icone_tema, width=50, height=40,
-            corner_radius=12, fg_color=cores["ENTRY_BG"],
-            hover_color=cores["HOVER"], text_color=cores["TEXT_PRIMARY"],
-            font=ctk.CTkFont(size=20), command=self.alternar_tema
+            header,
+            text=icone_tema,
+            width=40,
+            height=40,
+            corner_radius=12,
+            fg_color=cores["ENTRY_BG"],
+            hover_color=cores["HOVER"],
+            text_color=cores["TEXT_PRIMARY"],
+            font=ctk.CTkFont(size=25),
+            command=self.alternar_tema
         )
-        theme_button.grid(row=0, column=2, padx=30, pady=20)
+        theme_button.grid(row=0, column=2, padx=20, pady=20, sticky="e")
 
-        # Tabs
-        tabs = ctk.CTkTabview(self.app,
+        # Botão voltar
+        btn_voltar = ctk.CTkButton(
+            header, text="⬅ Voltar", width=100, height=40,
+            corner_radius=12, fg_color="#333", hover_color=cores["HOVER"],
+            command=self.voltar_menu
+        )
+        btn_voltar.place(relx=0.9, rely=0.5, anchor="center")
+
+        # === Tabs ===
+        tabs = ctk.CTkTabview(
+            self.app,
             fg_color=cores["BACKGROUND"],
             segmented_button_selected_color=cores["PRIMARY"],
             segmented_button_selected_hover_color=cores["HOVER"],
             corner_radius=12
         )
-        tabs.pack(expand=True, fill="both", padx=20, pady=(10,20))
+        tabs.pack(expand=True, fill="both", padx=20, pady=(10, 20))
         tabs.add("Produtos")
         tabs.add("Carrinho")
 
-        # Frames
+        # === FRAMES ===
         self.produtos_frame = ctk.CTkScrollableFrame(
             tabs.tab("Produtos"), fg_color=cores["BACKGROUND"]
         )
@@ -128,6 +133,7 @@ class LojaApp:
         )
         self.carrinho_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
+        # Botão finalizar compra
         btn_finalizar = ctk.CTkButton(
             tabs.tab("Carrinho"), text="✅ Finalizar compra",
             width=200, height=50, corner_radius=16,
@@ -141,12 +147,12 @@ class LojaApp:
         self.atualizar_lista_produtos()
         self.atualizar_carrinho()
 
-    # === VOLTAR PARA MENU PRINCIPAL ===
+    # === VOLTAR MENU ===
     def voltar_menu(self):
         from data import menu
-        menu.mostrar_menu(self.app,usuario=sessao.usuario,perfil=sessao.perfil)
+        menu.mostrar_menu(self.app, usuario=sessao.usuario, perfil=sessao.perfil)
 
-    # === LÓGICA DA LOJA ===
+    # === LÓGICA DO CAIXA ===
     def adicionar_ao_carrinho(self, produto, qtd_str):
         nome = produto["nome"]
         preco = produto["preco"]
@@ -162,6 +168,7 @@ class LojaApp:
             self.carrinho[nome]["qtd"] += qtd
         else:
             self.carrinho[nome] = {"preco": preco, "qtd": qtd, "img": produto["img"]}
+
         self.atualizar_carrinho()
         self.toast(f"✅ {nome} adicionado ao carrinho ({qtd:.2f}).")
 
@@ -186,33 +193,42 @@ class LojaApp:
         self.carrinho.clear()
         self.atualizar_carrinho()
 
+    # === INTERFACE PRODUTOS / CARRINHO ===
     def atualizar_lista_produtos(self):
         for w in self.produtos_frame.winfo_children():
             w.destroy()
-        cores = self.get_colors()
+
+        cores = get_colors()
         termo = self.entry_search.get().lower().strip()
         num_colunas = 2
+
         for index, prod in enumerate(self.produtos):
             if termo and termo not in prod["nome"].lower():
                 continue
+
             row = index // num_colunas
             col = index % num_colunas
+
             card = ctk.CTkFrame(self.produtos_frame, fg_color=cores["CARD_BG"], corner_radius=12, width=400, height=150)
             card.grid(row=row, column=col, padx=15, pady=15, sticky="nsew")
             self.produtos_frame.grid_columnconfigure(col, weight=1)
+
             img = self.imagens_cache.get(prod["nome"])
             if img:
                 ctk.CTkLabel(card, image=img, text="").place(relx=0.05, rely=0.5, anchor="w")
             else:
                 ctk.CTkLabel(card, text="📦", font=ctk.CTkFont(size=30)).place(relx=0.05, rely=0.5, anchor="w")
+
             info_x = 0.25
             ctk.CTkLabel(card, text=prod["nome"], font=ctk.CTkFont(size=16, weight="bold"),
                          text_color=cores["TEXT_PRIMARY"]).place(relx=info_x, rely=0.25, anchor="w")
             ctk.CTkLabel(card, text=f"R$ {prod['preco']:.2f}", font=ctk.CTkFont(size=14),
                          text_color=cores["TEXT_SECONDARY"]).place(relx=info_x, rely=0.55, anchor="w")
+
             entry_qtd = ctk.CTkEntry(card, width=60, height=32, corner_radius=10, placeholder_text="kg/un")
             entry_qtd.insert(0, "1")
             entry_qtd.place(relx=0.25, rely=0.75, anchor="w")
+
             ctk.CTkButton(
                 card, text="➕ Adicionar", width=120, height=35,
                 fg_color=cores["PRIMARY"], hover_color=cores["HOVER"],
@@ -224,7 +240,9 @@ class LojaApp:
     def atualizar_carrinho(self):
         for w in self.carrinho_frame.winfo_children():
             w.destroy()
-        cores = self.get_colors()
+
+        cores = get_colors()
+
         if not self.carrinho:
             ctk.CTkLabel(
                 self.carrinho_frame,
@@ -233,23 +251,28 @@ class LojaApp:
                 text_color=cores["TEXT_PRIMARY"]
             ).pack(pady=40)
             return
+
         total = 0
         for nome, info in self.carrinho.items():
             subtotal = info["preco"] * info["qtd"]
             total += subtotal
+
             card = ctk.CTkFrame(self.carrinho_frame, fg_color=cores["CARD_BG"], corner_radius=12)
             card.pack(fill="x", padx=20, pady=8)
+
             img = self.imagens_cache.get(nome)
             if img:
                 ctk.CTkLabel(card, image=img, text="").pack(side="left", padx=15, pady=12)
             else:
                 ctk.CTkLabel(card, text="📦", font=ctk.CTkFont(size=24)).pack(side="left", padx=15, pady=12)
+
             ctk.CTkLabel(
                 card,
                 text=f"{nome} — {info['qtd']:.2f} x R$ {info['preco']:.2f} = R$ {subtotal:.2f}",
                 font=ctk.CTkFont(size=15),
                 text_color=cores["TEXT_PRIMARY"]
             ).pack(side="left", padx=10)
+
             ctk.CTkButton(
                 card, text="🗑 Remover", width=100, height=32,
                 fg_color="#D32F2F", hover_color="#B71C1C",
@@ -257,6 +280,7 @@ class LojaApp:
                 font=ctk.CTkFont(size=12),
                 command=lambda n=nome: self.remover_do_carrinho(n)
             ).pack(side="right", padx=20)
+
         ctk.CTkLabel(
             self.carrinho_frame,
             text=f"🧾 Total geral: R$ {total:.2f}",
@@ -264,6 +288,7 @@ class LojaApp:
             text_color=cores["PRIMARY"]
         ).pack(pady=20)
 
+    # === TOAST ===
     def toast(self, texto):
         toast = ctk.CTkLabel(
             self.app,

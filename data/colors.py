@@ -16,9 +16,11 @@ def get_colors():
     modo_escuro = ctk.get_appearance_mode() == "Dark"
     if modo_escuro:
         return {
-            "PRIMARY": "#FF7043",
-            "HOVER": "#FF5722",
+            "PRIMARY": "#E98C41",
+            "SECONDARY": "#5C85B3", 
+            "HOVER": "#E2B539",
             "BACKGROUND": "#2C2C2C",
+            "BACKGROUND_2": "#5C85B3",
             "CARD_BG": "#1E1E1E",
             "TEXT_PRIMARY": "WHITE",
             "TEXT_SECONDARY": "#BBBBBB",
@@ -26,9 +28,11 @@ def get_colors():
         }
     else:
         return {
-            "PRIMARY": "#FF7043",
-            "HOVER": "#FF5722",
+            "PRIMARY": "#E98C41",
+            "SECONDARY": "#E98C41",
+            "HOVER": "#E2B539",
             "BACKGROUND": "#F5F5F5",
+            "BACKGROUND_2": "#F5F5F5",
             "CARD_BG": "#FFFFFF",
             "TEXT_PRIMARY": "#3A3A3A",
             "TEXT_SECONDARY": "#666666",

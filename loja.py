@@ -16,6 +16,8 @@ def mostrar_login(app):
 
     # CONFIGURAÇÃO GRID PRINCIPAL
     app.title("Sistema Supermercado") 
+    app.geometry("1200x700")
+    app.minsize(900, 500)
     app.grid_rowconfigure(0, weight=1)
     app.grid_columnconfigure(0, weight=1)  # lado esquerdo maior
     app.grid_columnconfigure(1, weight=1)  # lado direito menor
@@ -84,19 +86,19 @@ def mostrar_login(app):
     # BOTÃO LOGIN        
     ctk.CTkButton(login_container, text="Entrar", font=("Arial", 15, "bold"),
                   width=300, height=45, corner_radius=10,
-                  fg_color="#E98C41", hover_color="#E2B539", command=on_login).pack(pady=8)
+                  fg_color=cores["PRIMARY"], hover_color=cores["HOVER"], command=on_login).pack(pady=8)
 
     # BOTÃO CADASTRO
     def abrir_cadastro():
         cadastro.abrir_cadastro(app)
     ctk.CTkButton(login_container, text="Cadastre-se", font=("Arial", 15, "bold"),
                   width=300, height=45, corner_radius=10,
-                  fg_color="transparent", hover_color="#E2B539",
-                  border_width=2, border_color="#E98C41", text_color="#E98C41",
+                  fg_color="transparent", hover_color=cores["HOVER"],
+                  border_width=2, border_color=cores["PRIMARY"], text_color=cores["PRIMARY"],
                   command=abrir_cadastro).pack(pady=8)
 
     # === FRAME DIREITA ===
-    frame_right = ctk.CTkFrame(app, corner_radius=0, fg_color="#E98C41")
+    frame_right = ctk.CTkFrame(app, corner_radius=0, fg_color=cores["PRIMARY"])
     frame_right.grid(row=0, column=1, sticky="nsew")
     frame_right.grid_rowconfigure(0, weight=1)  # espaço acima do logo
     frame_right.grid_rowconfigure(1, weight=1)  # logo
@@ -109,7 +111,7 @@ def mostrar_login(app):
         mostrar_login(app)
 
     # === BOTÃO ALTERNAR TEMA ===
-    icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "☀️"
+    icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "🔆"
     theme_button = ctk.CTkButton(
         frame_right, 
         text=icone_tema, 
@@ -119,7 +121,7 @@ def mostrar_login(app):
         fg_color=cores["ENTRY_BG"],
         hover_color=cores["HOVER"], 
         text_color=cores["TEXT_PRIMARY"],
-        font=ctk.CTkFont(size=20), 
+        font=ctk.CTkFont(size=25), 
         command=alternar_tema
         )
     theme_button.grid(row=0, column=0, padx=20, pady=20, sticky="ne") 
@@ -131,7 +133,7 @@ def mostrar_login(app):
     ctk.CTkLabel(frame_right, image=logo_image, text="").grid(row=1, column=0)
 
     # === RODAPÉ ===
-    frame_footer = ctk.CTkFrame(frame_right, corner_radius=0, fg_color="#E98C41", height=80)
+    frame_footer = ctk.CTkFrame(frame_right, corner_radius=0, fg_color=cores["PRIMARY"], height=80)
     frame_footer.grid(row=2, column=0, sticky="ew")
     frame_footer.grid_propagate(False)
 
@@ -195,7 +197,7 @@ def mostrar_login(app):
     for i, (text, cmd) in enumerate(links):
         btn = ctk.CTkButton(links_frame, text=text, font=("Arial", 13,"bold"),
                             width=0, height=0, corner_radius=0,
-                            fg_color="transparent", hover_color="#E98C41",
+                            fg_color="transparent", hover_color=cores["HOVER"],
                             text_color="#FFFFFF", command=cmd)
         btn.pack(side="left", padx=5)
 
