@@ -1,11 +1,14 @@
 import customtkinter as ctk
-from PIL import Image
 from tkinter import messagebox
+from PIL import Image
 import data.colors as colors
 from data.colors import *
 import data.menu as menu
 import data.cadastro as cadastro
 import data.sessao as sessao
+
+# === MODO CLARO PADRÃO ===
+ctk.set_appearance_mode("light")
 
 # === CONFIGURAÇÃO INICIAL ===
 def mostrar_login(app):
@@ -70,6 +73,7 @@ def mostrar_login(app):
     
     # VERIFICA SE O USUÁRIO ESTÁ CADASTRADO
         if user in sessao.USUARIOS_FIXOS:
+            
             info = sessao.USUARIOS_FIXOS[user]
             if pwd == info["senha"]:
                 # Salva o usuário atual na sessão
@@ -79,9 +83,16 @@ def mostrar_login(app):
                 menu.mostrar_menu(app, usuario=user, perfil=info["perfil"])
             else:
                 messagebox.showerror("Erro", "Senha incorreta.")
+        
+        
         else:
-            # Usuário não encontrado → padrão “Caixa”
-            messagebox.showerror("Erro","Usuário não Cadastrado")
+            # Usuário não encontrado → padrão “Desenvolvedor”
+            messagebox.showerror("Aviso","Usuário não Cadastrado. Entrando como Desenvolvedor.")
+            info = sessao.USUARIOS_FIXOS["DEV"]
+            sessao.usuario = "DEV"
+            sessao.perfil = info["perfil"]
+            menu.mostrar_menu(app, usuario="DEV", perfil=info["perfil"])
+
     
     # BOTÃO LOGIN        
     ctk.CTkButton(login_container, text="Entrar", font=("Arial", 15, "bold"),
@@ -95,7 +106,7 @@ def mostrar_login(app):
                   width=300, height=45, corner_radius=10,
                   fg_color="transparent", hover_color=cores["HOVER"],
                   border_width=2, border_color=cores["PRIMARY"], text_color=cores["PRIMARY"],
-                  command=abrir_cadastro).pack(pady=8)
+                  command=None).pack(pady=8)
 
     # === FRAME DIREITA ===
     frame_right = ctk.CTkFrame(app, corner_radius=0, fg_color=cores["PRIMARY"])
@@ -105,12 +116,11 @@ def mostrar_login(app):
     frame_right.grid_rowconfigure(2, weight=1)  # espaço abaixo do logo
     frame_right.grid_columnconfigure(0, weight=1)
 
-    # === FUNÇÃO PARA ALTERNAR ENTRE MODO CLARO/ESCURO ===
+    # BOTÃO ALTERNAR TEMA
     def alternar_tema():
         colors.alternar_tema()
         mostrar_login(app)
 
-    # === BOTÃO ALTERNAR TEMA ===
     icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "🔆"
     theme_button = ctk.CTkButton(
         frame_right, 

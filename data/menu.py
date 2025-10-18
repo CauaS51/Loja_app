@@ -77,9 +77,24 @@ def abrir_cadastros(app):
 def abrir_modulo(app, module_name):
     win = ctk.CTkToplevel(app)
     win.title(module_name)
-    win.geometry("600x420")
     win.transient(app)
     win.grab_set()
+    largura, altura = 600, 420
+    win.geometry(f"{largura}x{altura}")
+
+    # FAZ A JANELA FICAR ACIMA DA JANELA PRINCIPAL
+    win.transient(app)  # "app" é a janela principal
+    win.grab_set()      # impede interações com a janela principal até fechar a de cadastro
+
+    # CENTRALIZA A JANELA DE CADASTRO SOBRE A JANELA PRINCIPAL
+    app_x = app.winfo_x()
+    app_y = app.winfo_y()
+    app_largura = app.winfo_width()
+    app_altura = app.winfo_height()
+
+    x = app_x + (app_largura // 2) - (largura // 2)
+    y = app_y + (app_altura // 2) - (altura // 2)
+    win.geometry(f"{largura}x{altura}+{x}+{y}")
 
     ctk.CTkLabel(win, text=f"Módulo {module_name}", font=("Segoe UI", 18, "bold")).pack(pady=24)
     ctk.CTkLabel(win, text="Função em Desenvolvimento", font=("Segoe UI", 12), justify="center").pack(pady=8)
@@ -103,12 +118,11 @@ def mostrar_menu(app, usuario, perfil):
     header = ctk.CTkFrame(app, fg_color=cores["BACKGROUND_2"], corner_radius=15)
     header.pack(fill="x", padx=20, pady=20)
 
-# === FUNÇÃO PARA ALTERNAR ENTRE MODO CLARO/ESCURO ===
+    # BOTÃO ALTERNAR TEMA
     def alternar_tema():
         colors.alternar_tema()
         mostrar_menu(app, usuario, perfil)
-
-    # === BOTÃO ALTERNAR TEMA ===
+ 
     icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "🔆"
     theme_button = ctk.CTkButton(
         header, 
@@ -123,7 +137,6 @@ def mostrar_menu(app, usuario, perfil):
         command=alternar_tema
         )
     theme_button.pack(padx=10, pady=2)
-    # theme_button.grid(row=0, column=0, padx=20, pady=20, sticky="ne")
 
     # LOGO
     logo_frame = ctk.CTkFrame(header, fg_color=cores["BACKGROUND_2"], corner_radius=5)
@@ -139,7 +152,7 @@ def mostrar_menu(app, usuario, perfil):
     profile_combo = ctk.CTkLabel(user_frame, text=perfil, font=("Segoe UI", 14, "bold"), text_color=cores["SECONDARY"], fg_color=cores["BACKGROUND_2"])
     profile_combo.pack(side="left", padx=(0,10))
 
-    # --- LOGOUT ---
+    # LOGOUT
     def logout():
         if messagebox.askyesno("Sair", "Deseja realmente sair?"):
             sessao.usuario = None
@@ -158,13 +171,12 @@ def mostrar_menu(app, usuario, perfil):
     ctk.CTkLabel(welcome_frame, text=f"Bem-vindo, {usuario}!", text_color=cores["TEXT_PRIMARY"], font=("Segoe UI", 32, "bold")).pack(pady=(20,0))
     ctk.CTkLabel(welcome_frame, text="Escolha uma das opções:",text_color=cores["TEXT_PRIMARY"],  font=("Segoe UI", 14)).pack(pady=(0,20))
 
-    # === CARDS ===
+    # CARDS
     cards_frame = ctk.CTkFrame(welcome_frame, fg_color=cores["BACKGROUND"], corner_radius=10)
     cards_frame.pack(expand=True, fill="both", padx=20, pady=10)
     cards_frame.grid_columnconfigure((0,1), weight=1)
     cards_frame.grid_rowconfigure((0,1), weight=1)
 
-    # Criando os cards
     card_caixa = Card(cards_frame, "Caixa", CARD_CAIXA_COLOR, "🛒", command=lambda name="Caixa": abrir_caixa(app))
     card_caixa.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
     
@@ -184,12 +196,9 @@ def mostrar_menu(app, usuario, perfil):
         "Cadastros": card_cadastros
     }
 
-    # Bloqueia todos inicialmente
+    # BLOQUEIA TODOS INICIALMENTE
     for card in cards.values():
         card.set_locked(True)
 
-    # Atualiza permissões ao selecionar perfil
-    profile_combo.bind("<<ComboboxSelected>>", lambda e: aplicar_permissoes(cards, current_profile.get()))
-
-    # Aplica permissões iniciais
+    # APLICA PERMIÇÕES INICIAIS
     aplicar_permissoes(cards, current_profile.get())

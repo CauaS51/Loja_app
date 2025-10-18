@@ -2,10 +2,9 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from PIL import Image
-from data.colors import *
 import data.colors as colors
+from data.colors import *
 import data.sessao as sessao
-
 
 # === CLASSE PRINCIPAL ===
 class LojaApp:
@@ -27,16 +26,9 @@ class LojaApp:
         self.imagens_cache = {}
 
         self.carregar_imagens()
-        self.mostrar_tela()
+        self.abrir_caixa()
 
-    # === ALTERNAR TEMA ===
-    def alternar_tema(self):
-        modo_atual = ctk.get_appearance_mode()
-        novo_modo = "Light" if modo_atual == "Dark" else "Dark"
-        ctk.set_appearance_mode(novo_modo)
-        self.mostrar_tela()
-
-    # === CARREGAR IMAGENS ===
+# === CARREGAR IMAGENS ===
     def carregar_imagens(self):
         for produto in self.produtos:
             try:
@@ -47,46 +39,57 @@ class LojaApp:
             except:
                 self.imagens_cache[produto["nome"]] = None
 
+ #============================================================================#               
 
-
-
-
-
-
-    # === MONTAR INTERFACE ===
-    def mostrar_tela(self):
+    # === FUNÇÃO PRINCIPAL PARA ABRIR CAIXA ===
+    def abrir_caixa(self):
         for w in self.app.winfo_children():
             w.destroy()
 
+        # NOME JANELA
         self.app.title("Caixa")
-        cores = get_colors()
-        self.app.configure(fg_color=cores["BACKGROUND"])
+        
+        #  CORES
+        cores = colors.get_colors()
 
         # === HEADER ===
         header = ctk.CTkFrame(self.app, fg_color=cores["PRIMARY"], height=80, corner_radius=0)
         header.pack(fill="x")
-        header.grid_columnconfigure(0, weight=1)
-        header.grid_columnconfigure(1, weight=0)
-        header.grid_columnconfigure(2, weight=0)
+        header.grid_columnconfigure(0, weight=0)  # botão voltar
+        header.grid_columnconfigure(1, weight=1)  # título
+        header.grid_columnconfigure(2, weight=0)  # busca
+        header.grid_columnconfigure(3, weight=0)  # tema
 
-        # Título
+        # BOTÃO VOLTAR
+        btn_voltar = ctk.CTkButton(
+            header, text="⬅", width=40, height=40, font=ctk.CTkFont(size=20),
+            corner_radius=12, text_color=cores["TEXT_PRIMARY"], fg_color=cores["ENTRY_BG"], hover_color=cores["HOVER"],
+            command=self.voltar_menu
+        )
+        btn_voltar.grid(row=0, column=0, padx=20, pady=20, sticky="w")
+
+        # TÍTULO
         title_label = ctk.CTkLabel(
             header, text="🛒 Caixa / Loja",
             text_color="white",
             font=ctk.CTkFont("Segoe UI", 26, "bold")
         )
-        title_label.grid(row=0, column=0, padx=30, pady=20, sticky="w")
+        title_label.grid(row=0, column=1, padx=(0,30), pady=20, sticky="w")
 
-        # Campo de busca
+        # CAMPO DE BUSCA
         self.entry_search = ctk.CTkEntry(
             header,
             placeholder_text="🔍 Buscar produto...",
             width=250, height=40, corner_radius=12,
             fg_color=cores["ENTRY_BG"], text_color=cores["TEXT_PRIMARY"]
         )
-        self.entry_search.grid(row=0, column=1, padx=10, pady=20)
+        self.entry_search.grid(row=0, column=2, padx=10, pady=20)
 
-        # Botão alternar tema
+        #  BOTÃO ALTERNAR TEMA 
+        def alternar_tema():
+            colors.alternar_tema()
+            self.abrir_caixa()
+
         icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "🔆"
         theme_button = ctk.CTkButton(
             header,
@@ -98,19 +101,11 @@ class LojaApp:
             hover_color=cores["HOVER"],
             text_color=cores["TEXT_PRIMARY"],
             font=ctk.CTkFont(size=25),
-            command=self.alternar_tema
+            command=alternar_tema
         )
-        theme_button.grid(row=0, column=2, padx=20, pady=20, sticky="e")
+        theme_button.grid(row=0, column=3, padx=20, pady=20, sticky="e")
 
-        # Botão voltar
-        btn_voltar = ctk.CTkButton(
-            header, text="⬅ Voltar", width=100, height=40,
-            corner_radius=12, fg_color="#333", hover_color=cores["HOVER"],
-            command=self.voltar_menu
-        )
-        btn_voltar.place(relx=0.9, rely=0.5, anchor="center")
-
-        # === Tabs ===
+        # === ABAS ===
         tabs = ctk.CTkTabview(
             self.app,
             fg_color=cores["BACKGROUND"],
@@ -122,7 +117,7 @@ class LojaApp:
         tabs.add("Produtos")
         tabs.add("Carrinho")
 
-        # === FRAMES ===
+        # OPÇÕES
         self.produtos_frame = ctk.CTkScrollableFrame(
             tabs.tab("Produtos"), fg_color=cores["BACKGROUND"]
         )
@@ -133,7 +128,7 @@ class LojaApp:
         )
         self.carrinho_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Botão finalizar compra
+        # BOTÃO FINALIZAR COMPRA
         btn_finalizar = ctk.CTkButton(
             tabs.tab("Carrinho"), text="✅ Finalizar compra",
             width=200, height=50, corner_radius=16,
@@ -147,12 +142,13 @@ class LojaApp:
         self.atualizar_lista_produtos()
         self.atualizar_carrinho()
 
-    # === VOLTAR MENU ===
+    # === FUNÇÕES AUXILIARES ===    
+    # FUNÇÃO VOLTAR MENU
     def voltar_menu(self):
         from data import menu
         menu.mostrar_menu(self.app, usuario=sessao.usuario, perfil=sessao.perfil)
 
-    # === LÓGICA DO CAIXA ===
+    # LÓGICA DO CAIXA
     def adicionar_ao_carrinho(self, produto, qtd_str):
         nome = produto["nome"]
         preco = produto["preco"]
@@ -193,7 +189,7 @@ class LojaApp:
         self.carrinho.clear()
         self.atualizar_carrinho()
 
-    # === INTERFACE PRODUTOS / CARRINHO ===
+    # INTERFACE PRODUTOS / CARRINHO
     def atualizar_lista_produtos(self):
         for w in self.produtos_frame.winfo_children():
             w.destroy()
@@ -300,7 +296,6 @@ class LojaApp:
         )
         toast.place(relx=0.5, rely=0.95, anchor="s")
         self.app.after(2500, toast.destroy)
-
 
 # === FUNÇÃO DE ACESSO PELO MENU ===
 def mostrar_menu(app):
