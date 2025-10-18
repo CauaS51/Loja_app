@@ -103,10 +103,32 @@ def mostrar_menu(app, usuario, perfil):
     header = ctk.CTkFrame(app, fg_color=cores["BACKGROUND_2"], corner_radius=15)
     header.pack(fill="x", padx=20, pady=20)
 
+# === FUNÇÃO PARA ALTERNAR ENTRE MODO CLARO/ESCURO ===
+    def alternar_tema():
+        colors.alternar_tema()
+        mostrar_menu(app, usuario, perfil)
+
+    # === BOTÃO ALTERNAR TEMA ===
+    icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "🔆"
+    theme_button = ctk.CTkButton(
+        header, 
+        text=icone_tema, 
+        width=30, 
+        height=40,
+        corner_radius=12, 
+        fg_color=cores["ENTRY_BG"],
+        hover_color=cores["HOVER"], 
+        text_color=cores["TEXT_PRIMARY"],
+        font=ctk.CTkFont(size=25), 
+        command=alternar_tema
+        )
+    theme_button.pack(padx=10, pady=2)
+    # theme_button.grid(row=0, column=0, padx=20, pady=20, sticky="ne")
+
     # LOGO
     logo_frame = ctk.CTkFrame(header, fg_color=cores["BACKGROUND_2"], corner_radius=5)
     logo_frame.pack(side="left", padx=50, pady=(0,5))
-    ctk.CTkLabel(logo_frame, text="🏬", font=("Segoe UI", 50), text_color=cores["TEXT_PRIMARY"], fg_color=cores["BACKGROUND_2"]).pack(side="left", padx=(10,0))
+    ctk.CTkLabel(logo_frame, text="🏬", font=("Segoe UI", 50), text_color=cores["SECONDARY"], fg_color=cores["BACKGROUND_2"]).pack(side="left", padx=(10,0))
     ctk.CTkLabel(logo_frame, text="SUPERMERCADO", font=("Segoe UI", 20, "bold"), text_color=cores["TEXT_PRIMARY"], fg_color=cores["BACKGROUND_2"]).pack(side="left", padx=(10,10))
 
     # USUÁRIO E PERFIL
@@ -114,7 +136,7 @@ def mostrar_menu(app, usuario, perfil):
     user_frame.pack(side="right", padx=30)
     ctk.CTkLabel(user_frame, text=usuario, font=("Segoe UI", 14), text_color=cores["TEXT_PRIMARY"], fg_color=cores["BACKGROUND_2"]).pack(side="left", padx=(0,10))
     
-    profile_combo = ctk.CTkLabel(user_frame, text=perfil, font=("Segoe UI", 14, "bold"), text_color=cores["PRIMARY"], fg_color=cores["BACKGROUND_2"])
+    profile_combo = ctk.CTkLabel(user_frame, text=perfil, font=("Segoe UI", 14, "bold"), text_color=cores["SECONDARY"], fg_color=cores["BACKGROUND_2"])
     profile_combo.pack(side="left", padx=(0,10))
 
     # --- LOGOUT ---

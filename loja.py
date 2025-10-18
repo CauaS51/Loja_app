@@ -57,7 +57,7 @@ def mostrar_login(app):
     def esqueci_senha():
         print("A opção 'Esqueci minha senha' foi clicada!")
     ctk.CTkButton(login_container, text="Esqueceu sua senha?", fg_color="transparent",
-                  hover_color="#E8E8E8", font=("Segoe UI", 13,"bold"),
+                  hover_color=cores["HOVER"], font=("Segoe UI", 13,"bold"),
                   text_color=cores["TEXT_PRIMARY"], command=esqueci_senha).pack(pady=(5,15), padx=(0,175))
 
     # --- FUNÇÃO LOGIN ---
@@ -127,9 +127,15 @@ def mostrar_login(app):
     theme_button.grid(row=0, column=0, padx=20, pady=20, sticky="ne") 
 
     # LOGO
-    logo_image = ctk.CTkImage(light_image=Image.open("images/logo_loja.png"),
-                              dark_image=Image.open("images/logo_loja.png"),
-                              size=(400, 330))
+    if ctk.get_appearance_mode() == "Dark":
+        logo_image = ctk.CTkImage(light_image=Image.open("images/logo_loja_dark.png"),
+                                dark_image=Image.open("images/logo_loja_dark.png"),
+                                size=(400, 330))
+    else:
+        logo_image = ctk.CTkImage(light_image=Image.open("images/logo_loja.png"),
+                                dark_image=Image.open("images/logo_loja.png"),
+                                size=(400, 330))
+    
     ctk.CTkLabel(frame_right, image=logo_image, text="").grid(row=1, column=0)
 
     # === RODAPÉ ===
@@ -139,7 +145,6 @@ def mostrar_login(app):
 
     links_frame = ctk.CTkFrame(frame_footer, fg_color="transparent")
     links_frame.pack(pady=(20,20))
-
 
     # LINKS DO RODAPÉ
     def abrir_politica():
