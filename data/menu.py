@@ -6,6 +6,7 @@ import data.sessao as sessao
 import loja
 import data.caixa as caixa
 import data.cadastro as cadastro
+import data.relatorios as relatorios
 
 # === PERFIS ===
 PROFILES = {
@@ -73,6 +74,9 @@ def abrir_caixa(app):
 
 def abrir_cadastros(app):
     cadastro.abrir_cadastro(app)
+
+def mostrar_relatorios(app):
+    relatorios.mostrar_relatorios(app) 
 
 def abrir_modulo(app, module_name):
     win = ctk.CTkToplevel(app)
@@ -183,7 +187,7 @@ def mostrar_menu(app, usuario, perfil):
     card_estoque = Card(cards_frame, "Repositório", CARD_ESTOQUE_COLOR,"📦", command=lambda name="Repositório": abrir_modulo(app, name))
     card_estoque.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
     
-    card_relatorios = Card(cards_frame, "Relatórios", CARD_RELATORIOS_COLOR, "📊", command=lambda name="Relatórios": abrir_modulo(app, name))
+    card_relatorios = Card(cards_frame, "Relatórios", CARD_RELATORIOS_COLOR, "📊", command=lambda name="Relatórios": mostrar_relatorios(app))
     card_relatorios.grid(row=1, column=0, padx=20, pady=20, sticky="nsew")
     
     card_cadastros = Card(cards_frame, "Cadastros", CARD_CADASTROS_COLOR, "👥", command=lambda name="Cadastros": abrir_cadastros(app))
