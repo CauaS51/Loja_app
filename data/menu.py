@@ -2,18 +2,18 @@ import customtkinter as ctk
 from tkinter import messagebox
 import data.colors as colors
 from data.colors import *
-import data.sessao as sessao
 import loja
 import data.caixa as caixa
 import data.cadastro as cadastro
 import data.relatorios as relatorios
+import data.sessao as sessao
 
 # === PERFIS ===
 PROFILES = {
     "Desenvolvedor": {"Caixa": True, "Repositório": True, "Relatórios": True, "Cadastros": True},
     "Caixa": {"Caixa": True, "Repositório": False, "Relatórios": False, "Cadastros": False},
-    "Reposição": {"Caixa": False, "Repositório": True, "Relatórios": False, "Cadastros": False},
-    "Administração": {"Caixa": False, "Repositório": False, "Relatórios": True, "Cadastros": True}
+    "Repositor": {"Caixa": False, "Repositório": True, "Relatórios": False, "Cadastros": False},
+    "Gestor de Dados": {"Caixa": False, "Repositório": False, "Relatórios": True, "Cadastros": True}
 }
 
 # --- CARD REUTILIZÁVEL ---

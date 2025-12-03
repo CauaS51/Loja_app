@@ -110,10 +110,6 @@ class RelatoriosApp:
             messagebox.showwarning("Aviso", "Por favor, preencha as datas de início e fim.")
             return
         
-        # Aqui você adicionaria a lógica para buscar os dados de vendas
-        # e gerar o relatório com base nas datas. 
-        # Por enquanto, vamos simular um relatório.
-
         # Limpa a área de exibição anterior
         for w in self.report_display_frame.winfo_children():
             w.destroy()
@@ -126,27 +122,35 @@ class RelatoriosApp:
             font=ctk.CTkFont(size=18, weight="bold"), text_color=cores["PRIMARY"]
         ).pack(pady=10)
 
-        # Dados simulados
-        relatorio_data = [
-            {"produto": "Nenhum Produto Vendido", "quantidade": 0, "total": 0},
+        # Relatórios financeiros (fluxo de caixa)
+        ctk.CTkLabel(self.report_display_frame, text="Fluxo de Caixa: Entradas e Saídas", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=5)
+        fluxo_caixa_data = [
+            {"entrada": "Venda Produto A", "valor": 500},
+            {"saida": "Pagamento Fornecedor", "valor": 300},
         ]
-
-        total_geral = 0
-        for item in relatorio_data:
-            frame_item = ctk.CTkFrame(self.report_display_frame, fg_color=cores["BACKGROUND"], corner_radius=8)
-            frame_item.pack(fill="x", padx=10, pady=5)
-            
-            ctk.CTkLabel(
-                frame_item, text=f"{item['produto']}: {item['quantidade']} unidades - R$ {item['total']:.2f}",
-                text_color=cores["TEXT_PRIMARY"], font=ctk.CTkFont(size=14)
-            ).pack(side="left", padx=10, pady=5)
-            total_geral += item['total']
+        for item in fluxo_caixa_data:
+            ctk.CTkLabel(self.report_display_frame, text=f"{item['entrada' if 'entrada' in item else 'saida']}: R$ {item['valor']:.2f}",
+                         font=ctk.CTkFont(size=14), text_color=cores["TEXT_PRIMARY"]).pack(pady=5)
         
-        ctk.CTkLabel(
-            self.report_display_frame, text=f"\nTotal de Vendas no Período: R$ {total_geral:.2f}",
-            font=ctk.CTkFont(size=16, weight="bold"), text_color=cores["PRIMARY"]
-        ).pack(pady=10)
+        # Relatório de Lucratividade
+        ctk.CTkLabel(self.report_display_frame, text="Lucratividade: Análise por produto", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=5)
+        lucratividade_data = [
+            {"produto": "Produto A", "lucro": 100},
+            {"produto": "Produto B", "lucro": 150},
+        ]
+        for item in lucratividade_data:
+            ctk.CTkLabel(self.report_display_frame, text=f"{item['produto']}: R$ {item['lucro']:.2f}",
+                         font=ctk.CTkFont(size=14), text_color=cores["TEXT_PRIMARY"]).pack(pady=5)
 
+        # Formas de pagamento
+        ctk.CTkLabel(self.report_display_frame, text="Formas de Pagamento", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=5)
+        pagamentos_data = [
+            {"forma": "Crédito", "valor": 600},
+            {"forma": "Débito", "valor": 400},
+            {"forma": "PIX", "valor": 500},
+        ]
+        for item in pagamentos_data:
+            ctk.CTkLab
 
 def mostrar_relatorios(app):
     RelatoriosApp(app)

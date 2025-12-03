@@ -6,6 +6,18 @@ from data.colors import *
 import data.menu as menu
 import data.cadastro as cadastro
 import data.sessao as sessao
+import mysql.connector
+
+# =======================
+# CONEXÃO COM BANCO MYSQL
+# =======================
+def conectar_banco():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",  # altere conforme seu MySQL
+        password="",  # troque pela sua senha real
+        database="loja_db_test"
+    )
 
 # === MODO CLARO PADRÃO ===
 ctk.set_appearance_mode("light")
@@ -63,37 +75,47 @@ def mostrar_login(app):
                   hover_color=cores["HOVER"], font=("Segoe UI", 13,"bold"),
                   text_color=cores["TEXT_PRIMARY"], command=esqueci_senha).pack(pady=(5,15), padx=(0,175))
 
-    # --- FUNÇÃO LOGIN ---
+    # ==================
+    # FUNÇÃO LOGIN
+    # ==================
     def on_login():
-        user = entry_user.get().strip()
-        pwd  = entry_pass.get().strip()
-        if not user or not pwd:
+        login_input = entry_user.get().strip()
+        pwd_input  = entry_pass.get().strip()
+
+        if not login_input or not pwd_input:
             messagebox.showwarning("Atenção", "Informe usuário e senha.")
             return
     
-    # VERIFICA SE O USUÁRIO ESTÁ CADASTRADO
-        if user in sessao.USUARIOS_FIXOS:
-            
-            info = sessao.USUARIOS_FIXOS[user]
-            if pwd == info["senha"]:
-                # Salva o usuário atual na sessão
-                sessao.usuario = user
-                sessao.perfil = info["perfil"]
+        try:
+            conn = conectar_banco()
+            cursor = conn.cursor(dictionary=True)
+            query = """
+            SELECT Funcionarios.Nome, Funcionarios.Login, Perfis.Nome_Perfil 
+            FROM Funcionarios  
+            LEFT JOIN Perfis ON Funcionarios.ID_Perfil = Perfis.ID_Perfil
+            WHERE Funcionarios.Login = %s AND Funcionarios.Senha = %s
+            """
+            cursor.execute(query, (login_input, pwd_input))
+            resultado = cursor.fetchone()
+            cursor.close()
+            conn.close()
+        
+            if resultado:
+                sessao.usuario = resultado['Nome']
+                sessao.perfil = resultado['Nome_Perfil']
+                
+                messagebox.showinfo("Sucesso", f"Bem-vindo, {sessao.usuario}!\nPerfil: {sessao.perfil}")
+                
+                for w in app.winfo_children():
+                    w.destroy()
 
-                menu.mostrar_menu(app, usuario=user, perfil=info["perfil"])
+                menu.mostrar_menu(app, usuario=sessao.usuario, perfil=sessao.perfil)  # Passa o dicionário user
             else:
-                messagebox.showerror("Erro", "Senha incorreta.")
-        
-        
-        else:
-            # Usuário não encontrado → padrão “Desenvolvedor”
-            messagebox.showerror("Aviso","Usuário não Cadastrado. Entrando como Desenvolvedor.")
-            info = sessao.USUARIOS_FIXOS["DEV"]
-            sessao.usuario = "DEV"
-            sessao.perfil = info["perfil"]
-            menu.mostrar_menu(app, usuario="DEV", perfil=info["perfil"])
+                messagebox.showerror("Erro", "Usuário ou senha incorretos.")
+        except Exception as e:
+            messagebox.showerror("Erro de conexão", f"Falha ao conectar ao banco:\n{str(e)}")
+            print(f"Erro completo: {e}")  # Log to console
 
-    
     # BOTÃO LOGIN        
     ctk.CTkButton(login_container, text="Entrar", font=("Arial", 15, "bold"),
                   width=300, height=45, corner_radius=10,
@@ -101,12 +123,12 @@ def mostrar_login(app):
 
     # BOTÃO CADASTRO
     def abrir_cadastro():
-        cadastro.abrir_cadastro(app)
+        cadastro.cadastro_login(app)
     ctk.CTkButton(login_container, text="Cadastre-se", font=("Arial", 15, "bold"),
                   width=300, height=45, corner_radius=10,
                   fg_color="transparent", hover_color=cores["HOVER"],
                   border_width=2, border_color=cores["PRIMARY"], text_color=cores["PRIMARY"],
-                  command=None).pack(pady=8)
+                  command=abrir_cadastro).pack(pady=8)
 
     # === FRAME DIREITA ===
     frame_right = ctk.CTkFrame(app, corner_radius=0, fg_color=cores["PRIMARY"])
@@ -118,6 +140,7 @@ def mostrar_login(app):
 
     # BOTÃO ALTERNAR TEMA
     def alternar_tema():
+        app.focus_force()
         colors.alternar_tema()
         mostrar_login(app)
 
@@ -192,7 +215,7 @@ def mostrar_login(app):
     def abrir_ajuda():
         win = ctk.CTkToplevel(app)
         win.title("Ajuda")
-        ctk.CTkLabel(win, text="Suporte", font=("Arial", 20, "bold")).pack(pady=20)
+        ctk.CTkLabel(win, text="Ajuda", font=("Arial", 20, "bold")).pack(pady=20)
         largura, altura =900, 600
         win.geometry(f"{largura}x{altura}")  
         win.transient(app)  
