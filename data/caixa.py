@@ -7,7 +7,7 @@ from data.colors import *
 import data.sessao as sessao
 
 # === CLASSE PRINCIPAL ===
-class LojaApp:
+class Caixa:
     def __init__(self, app):
         self.app = app
         self.produtos = [
@@ -299,4 +299,4 @@ class LojaApp:
 
 # === FUNÇÃO DE ACESSO PELO MENU ===
 def mostrar_menu(app):
-    LojaApp(app)
+    Caixa(app)
