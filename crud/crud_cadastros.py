@@ -1,4 +1,4 @@
-from conexao import conectar
+from data.conexao import conectar
 
 # FUNÇÃO CADASTRAR USUÁRIO
 def cadastrar_usuario(Nome, Login, Senha, ID_Perfil):
