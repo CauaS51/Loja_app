@@ -1,6 +1,6 @@
 -- Criação do banco de dados
-CREATE DATABASE IF NOT EXISTS loja_db_test;
-USE loja_db_test;
+CREATE DATABASE IF NOT EXISTS loja_db;
+USE loja_db;
 
 -- ========================
 -- Tabela: Perfil
@@ -33,4 +33,3 @@ INSERT INTO Funcionarios (Nome, Login, Senha, ID_Perfil) VALUES
 ('Isaac Amaral', 'isaac.amaral', '123', 1),
 ('Romulo Silva', 'romulo.silva', '123', 1),
 ('Cauã Sérgio', 'caua.sergio', '123', 1);
-

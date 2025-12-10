@@ -16,7 +16,7 @@ def conectar_banco():
         host="localhost",
         user="root",  # altere conforme seu MySQL
         password="",  # troque pela sua senha real
-        database="loja_db_test"
+        database="loja_db"
     )
 
 # === MODO CLARO PADRÃO ===

@@ -7,7 +7,7 @@ def conectar():
             host="localhost",
             user="root",
             password="",
-            database="loja_db_test"
+            database="loja_db"
         )
         return conexao
     except Error as e:
