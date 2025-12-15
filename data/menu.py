@@ -4,9 +4,11 @@ import data.colors as colors
 from data.colors import *
 import loja
 import data.caixa as caixa
-import data.cadastro as cadastro
+import data.repositorio as repositorio
 import data.relatorios as relatorios
+import data.cadastro as cadastro
 import data.sessao as sessao
+
 
 # === PERFIS ===
 PROFILES = {
@@ -78,31 +80,8 @@ def abrir_cadastros(app):
 def mostrar_relatorios(app):
     relatorios.mostrar_relatorios(app) 
 
-def abrir_modulo(app, module_name):
-    win = ctk.CTkToplevel(app)
-    win.title(module_name)
-    win.transient(app)
-    win.grab_set()
-    largura, altura = 600, 420
-    win.geometry(f"{largura}x{altura}")
-
-    # FAZ A JANELA FICAR ACIMA DA JANELA PRINCIPAL
-    win.transient(app)  # "app" é a janela principal
-    win.grab_set()      # impede interações com a janela principal até fechar a de cadastro
-
-    # CENTRALIZA A JANELA DE CADASTRO SOBRE A JANELA PRINCIPAL
-    app_x = app.winfo_x()
-    app_y = app.winfo_y()
-    app_largura = app.winfo_width()
-    app_altura = app.winfo_height()
-
-    x = app_x + (app_largura // 2) - (largura // 2)
-    y = app_y + (app_altura // 2) - (altura // 2)
-    win.geometry(f"{largura}x{altura}+{x}+{y}")
-
-    ctk.CTkLabel(win, text=f"Módulo {module_name}", font=("Segoe UI", 18, "bold")).pack(pady=24)
-    ctk.CTkLabel(win, text="Função em Desenvolvimento", font=("Segoe UI", 12), justify="center").pack(pady=8)
-    ctk.CTkButton(win, text="Fechar", command=win.destroy).pack(side="bottom", pady=18)
+def abrir_repositorio(app):
+    repositorio.abrir_repositorio(app)
 
 # === FUNÇÃO PRINCIPAL PARA MOSTRAR O MENU ===
 def mostrar_menu(app, usuario, perfil):
@@ -184,7 +163,7 @@ def mostrar_menu(app, usuario, perfil):
     card_caixa = Card(cards_frame, "Caixa", CARD_CAIXA_COLOR, "🛒", command=lambda name="Caixa": abrir_caixa(app))
     card_caixa.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
     
-    card_estoque = Card(cards_frame, "Repositório", CARD_ESTOQUE_COLOR,"📦", command=lambda name="Repositório": abrir_modulo(app, name))
+    card_estoque = Card(cards_frame, "Repositório", CARD_ESTOQUE_COLOR,"📦", command=lambda name="Repositório": abrir_repositorio(app))
     card_estoque.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
     
     card_relatorios = Card(cards_frame, "Relatórios", CARD_RELATORIOS_COLOR, "📊", command=lambda name="Relatórios": mostrar_relatorios(app))
