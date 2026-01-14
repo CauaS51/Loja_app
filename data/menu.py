@@ -2,7 +2,6 @@ import customtkinter as ctk
 from tkinter import messagebox
 import data.colors as colors
 from data.colors import *
-import loja
 import data.caixa as caixa
 import data.repositorio as repositorio
 import data.relatorios as relatorios
@@ -140,7 +139,9 @@ def mostrar_menu(app, usuario, perfil):
         if messagebox.askyesno("Sair", "Deseja realmente sair?"):
             sessao.usuario = None
             sessao.perfil = None
-            loja.mostrar_login(app)
+
+            from loja import mostrar_login
+            mostrar_login(app)
     ctk.CTkButton(user_frame, text="Sair", command=logout, width=70).pack(padx=(10,10),side="left")
 
     # === ÁREA PRINCIPAL ===
