@@ -1,21 +1,20 @@
 from data.conexao import conectar
+from crud.crud_categorias import buscar_id_por_nome
 
-# ===================== CADASTRAR PRODUTO =====================
-def cadastrar_produto(nome, preco, img):
+# Cadastrar produto
+def cadastrar_produto(nome, preco, img, categoria_nome):
     con = conectar()
     if con is None:
-        print("Falha ao conectar ao banco")
-        return False
+        return None
+
+    categoria_id = buscar_id_por_nome(categoria_nome)
 
     cursor = con.cursor()
-    cursor.execute("SELECT * FROM Produtos WHERE Nome=%s", (nome,))
-    if cursor.fetchone():
-        print(f"Produto '{nome}' já existe!")
-        return False
-
-    comando = "INSERT INTO Produtos (Nome, Preco, Img) VALUES (%s, %s, %s)"
     try:
-        cursor.execute(comando, (nome, preco, img))
+        cursor.execute(
+            "INSERT INTO Produtos (Nome, Preco, Categoria_ID, Img) VALUES (%s, %s, %s, %s)",
+            (nome, preco, categoria_id, img)
+        )
         con.commit()
         return cursor.lastrowid
     except Exception as e:
@@ -25,26 +24,34 @@ def cadastrar_produto(nome, preco, img):
         con.close()
 
 
-# ===================== LISTAR PRODUTOS =====================
-def listar_produtos():
+# Listar produtos (com nome da categoria/subcategoria)
+def listar_produtos(filtro_categoria_id=None, pesquisa=None):
     con = conectar()
     if con is None:
-        print("Falha ao conectar ao banco")
         return []
-    
+    cursor = con.cursor(dictionary=True)
     try:
-        cursor = con.cursor(dictionary=True)
         comando = """
-            SELECT 
-                ID_Produto AS codigo, 
-                Nome AS nome, 
-                Preco AS preco, 
-                Categoria AS categoria,
-                Img AS img
-            FROM Produtos
-            ORDER BY ID_Produto
+            SELECT p.ID_Produto AS codigo, p.Nome AS nome, p.Preco AS preco, p.Img AS img,
+                   c.Nome AS categoria, c.Pai_ID AS categoria_pai
+            FROM Produtos p
+            LEFT JOIN Categorias c ON p.Categoria_ID = c.ID_Categoria
         """
-        cursor.execute(comando)
+        filtros = []
+        valores = []
+
+        if filtro_categoria_id:
+            filtros.append("p.Categoria_ID=%s")
+            valores.append(filtro_categoria_id)
+        if pesquisa:
+            filtros.append("p.Nome LIKE %s")
+            valores.append(f"%{pesquisa}%")
+
+        if filtros:
+            comando += " WHERE " + " AND ".join(filtros)
+
+        comando += " ORDER BY p.ID_Produto"
+        cursor.execute(comando, tuple(valores))
         return cursor.fetchall()
     except Exception as e:
         print("Erro ao listar produtos:", e)
@@ -52,63 +59,41 @@ def listar_produtos():
     finally:
         con.close()
 
-# ===================== EXCLUIR PRODUTO =====================
-def excluir_produto(id_produto):
-    """
-    Exclui um produto pelo seu ID
-    """
+
+# Atualizar produto
+def atualizar_produto(codigo, nome, preco, img, categoria_nome):
     con = conectar()
     if con is None:
-        print("Falha ao conectar ao banco")
         return False
 
+    categoria_id = buscar_id_por_nome(categoria_nome)
     cursor = con.cursor()
     try:
-        cursor.execute("DELETE FROM Produtos WHERE ID_Produto = %s", (id_produto,))
+        cursor.execute(
+            "UPDATE Produtos SET Nome=%s, Preco=%s, Categoria_ID=%s, Img=%s WHERE ID_Produto=%s",
+            (nome, preco, categoria_id, img, codigo)
+        )
         con.commit()
-        print(f"Produto com ID {id_produto} excluído com sucesso!")
         return True
     except Exception as e:
-        print("Erro ao excluir produto:", e)
+        print("Erro ao atualizar produto:", e)
         return False
     finally:
         con.close()
 
 
-# ===================== ATUALIZAR PRODUTO =====================
-def atualizar_produto(id_produto, nome=None, preco=None, img=None):
+# Excluir produto
+def excluir_produto(id_produto):
     con = conectar()
     if con is None:
-        print("Falha ao conectar ao banco")
         return False
-
     cursor = con.cursor()
     try:
-        campos = []
-        valores = []
-
-        if nome is not None:
-            campos.append("Nome=%s")
-            valores.append(nome)
-        if preco is not None:
-            campos.append("Preco=%s")
-            valores.append(preco)
-        if img is not None:
-            campos.append("Img=%s")
-            valores.append(img)
-
-        if not campos:
-            print("Nenhum campo para atualizar")
-            return False
-
-        valores.append(id_produto)
-        comando = f"UPDATE Produtos SET {', '.join(campos)} WHERE ID_Produto=%s"
-        cursor.execute(comando, valores)
+        cursor.execute("DELETE FROM Produtos WHERE ID_Produto=%s", (id_produto,))
         con.commit()
-        print(f"Produto com ID {id_produto} atualizado com sucesso!")
         return True
     except Exception as e:
-        print("Erro ao atualizar produto:", e)
+        print("Erro ao excluir produto:", e)
         return False
     finally:
         con.close()

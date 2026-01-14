@@ -1,10 +1,13 @@
--- Criação do banco de dados
-CREATE DATABASE IF NOT EXISTS loja_db;
+-- =========================================
+-- CRIAÇÃO DO BANCO
+-- =========================================
+DROP DATABASE IF EXISTS loja_db;
+CREATE DATABASE loja_db;
 USE loja_db;
 
--- ========================
--- Tabela: Perfis
--- ========================
+-- =========================================
+-- TABELA: Perfis
+-- =========================================
 CREATE TABLE Perfis (
     ID_Perfil INT AUTO_INCREMENT PRIMARY KEY,
     Nome_Perfil VARCHAR(50) NOT NULL
@@ -16,16 +19,18 @@ INSERT INTO Perfis (Nome_Perfil) VALUES
 ('Repositor'),
 ('Gestor de Dados');
 
--- ========================
--- Tabela: Funcionarios
--- ========================
+-- =========================================
+-- TABELA: Funcionarios
+-- =========================================
 CREATE TABLE Funcionarios (
     ID_Funcionario INT AUTO_INCREMENT PRIMARY KEY,
     Nome VARCHAR(100) NOT NULL,
     Login VARCHAR(50) UNIQUE NOT NULL,
     Senha VARCHAR(100) NOT NULL,
     ID_Perfil INT,
-    FOREIGN KEY (ID_Perfil) REFERENCES Perfis(ID_Perfil)
+    FOREIGN KEY (ID_Perfil) 
+        REFERENCES Perfis(ID_Perfil)
+        ON DELETE SET NULL
 );
 
 INSERT INTO Funcionarios (Nome, Login, Senha, ID_Perfil) VALUES
@@ -33,19 +38,45 @@ INSERT INTO Funcionarios (Nome, Login, Senha, ID_Perfil) VALUES
 ('Romulo Silva', 'romulo.silva', '123', 1),
 ('Cauã Sérgio', 'caua.sergio', '123', 1);
 
--- ========================
--- Tabela: Produtos
--- ========================
+-- =========================================
+-- TABELA: Categorias (HIERÁRQUICA)
+-- =========================================
+CREATE TABLE Categorias (
+    ID_Categoria INT AUTO_INCREMENT PRIMARY KEY,
+    Nome VARCHAR(255) UNIQUE NOT NULL,
+    Pai_ID INT DEFAULT NULL,
+    FOREIGN KEY (Pai_ID) 
+        REFERENCES Categorias(ID_Categoria)
+        ON DELETE SET NULL
+);
+
+-- Categorias principais
+INSERT INTO Categorias (Nome, Pai_ID) VALUES
+('Salgados', NULL),
+('Bebidas', NULL);
+
+-- Subcategorias
+INSERT INTO Categorias (Nome, Pai_ID) VALUES
+('Refrigerantes', 2),
+('Água', 2),
+('Chips', 1);
+
+-- =========================================
+-- TABELA: Produtos
+-- =========================================
 CREATE TABLE Produtos (
     ID_Produto INT AUTO_INCREMENT PRIMARY KEY,
     Nome VARCHAR(255) NOT NULL,
     Preco DECIMAL(10,2) NOT NULL,
-    Categoria VARCHAR(255) NOT NULL,
-    Img VARCHAR(255)
+    Categoria_ID INT DEFAULT NULL,
+    Img VARCHAR(255),
+    FOREIGN KEY (Categoria_ID) 
+        REFERENCES Categorias(ID_Categoria)
+        ON DELETE SET NULL
 );
 
--- Inserir produtos de exemplo (corrigido: Categoria no lugar certo)
-INSERT INTO Produtos (Nome, Preco, Categoria, Img) VALUES
-('Salgadinho Doritos 28g', 4.50, 'Salgados', 'images/produtos/1.png'),
-('Refrigerante Lata', 5.00, 'Bebidas', 'images/produtos/2.png'),
-('Água Mineral 500ml', 2.00, 'Bebidas', 'images/produtos/3.png');
+-- Produtos de exemplo
+INSERT INTO Produtos (Nome, Preco, Categoria_ID, Img) VALUES
+('Salgadinho Doritos 28g', 4.50, 5, 'images/produtos/1.png'),
+('Refrigerante Lata', 5.00, 3, 'images/produtos/2.png'),
+('Água Mineral 500ml', 2.00, 4, 'images/produtos/3.png');
