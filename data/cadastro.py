@@ -371,9 +371,9 @@ class CadastroUsuariosApp:
 
     def voltar_menu(self):
         from data.cadastro import AreaCadastrosApp
-        import loja
+        import custompdv
         if sessao.usuario == None and sessao.perfil == None:
-            loja.mostrar_login(self.app)
+            custompdv.mostrar_login(self.app)
         else:
             AreaCadastrosApp(self.app)
 

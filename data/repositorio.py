@@ -255,7 +255,7 @@ class Repositorio:
         from data import menu
         import data.sessao as sessao
         if getattr(sessao, "usuario", None) is None and getattr(sessao, "perfil", None) is None:
-            from loja import mostrar_login
+            from custompdv import mostrar_login
             mostrar_login(self.app)
         else:
             menu.mostrar_menu(self.app, usuario=sessao.usuario, perfil=sessao.perfil)

@@ -187,6 +187,7 @@ class CaixaApp:
         )
         self.btn_remover_direita.pack(pady=5)
 
+        # ===== RESUMO =====
         resumo = ctk.CTkFrame(right, fg_color=cores["ENTRY_BG"])
         resumo.pack(fill="x", pady=10)
 
@@ -209,6 +210,16 @@ class CaixaApp:
         )
         self.lbl_total.pack(anchor="e", padx=10, pady=10)
 
+    # ===== BOTÃO FINALIZAR =====
+        self.btn_finalizar = ctk.CTkButton(
+        right,
+        text="💳 FINALIZAR VENDA",
+        font=ctk.CTkFont(size=16, weight="bold"),
+        height=45,
+        fg_color=cores["PRIMARY"],
+        # command=self.abrir_pagamento
+    )
+        self.btn_finalizar.pack(fill="x", padx=10, pady=10)
 
     # ==================== CARREGAR PRODUTOS ====================
     def carregar_produtos(self):

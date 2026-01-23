@@ -1,7 +1,6 @@
 -- =========================================
 -- CRIAÇÃO DO BANCO
 -- =========================================
-DROP DATABASE IF EXISTS loja_db;
 CREATE DATABASE loja_db;
 USE loja_db;
 
@@ -43,27 +42,17 @@ INSERT INTO Funcionarios (Nome, Login, Senha, ID_Perfil) VALUES
 -- =========================================
 CREATE TABLE Categorias (
     ID_Categoria INT AUTO_INCREMENT PRIMARY KEY,
-    Nome VARCHAR(255) UNIQUE NOT NULL,
+    Nome VARCHAR(150) UNIQUE NOT NULL,
     Pai_ID INT DEFAULT NULL,
     FOREIGN KEY (Pai_ID) 
-        REFERENCES Categorias(ID_Categoria)
-        ON DELETE SET NULL
+	REFERENCES Categorias(ID_Categoria)
+	ON DELETE SET NULL
 );
-
--- Categorias principais
-INSERT INTO Categorias (Nome, Pai_ID) VALUES
-('Salgados', NULL),
-('Bebidas', NULL);
-
--- Subcategorias
-INSERT INTO Categorias (Nome, Pai_ID) VALUES
-('Refrigerantes', 2),
-('Água', 2),
-('Chips', 1);
 
 -- =========================================
 -- TABELA: Produtos
 -- =========================================
+
 CREATE TABLE Produtos (
     ID_Produto INT AUTO_INCREMENT PRIMARY KEY,
     Nome VARCHAR(255) NOT NULL,
@@ -74,9 +63,3 @@ CREATE TABLE Produtos (
         REFERENCES Categorias(ID_Categoria)
         ON DELETE SET NULL
 );
-
--- Produtos de exemplo
-INSERT INTO Produtos (Nome, Preco, Categoria_ID, Img) VALUES
-('Salgadinho Doritos 28g', 4.50, 5, 'images/produtos/1.png'),
-('Refrigerante Lata', 5.00, 3, 'images/produtos/2.png'),
-('Água Mineral 500ml', 2.00, 4, 'images/produtos/3.png');

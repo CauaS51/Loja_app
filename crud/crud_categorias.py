@@ -1,6 +1,7 @@
 # === crud/crud_categorias.py ===
 from data.conexao import conectar  # usa a função existente no seu projeto
 
+# CADASTRAR CATEGORIA 
 def cadastrar_categoria(nome, pai_id=None):
     conn = conectar()
     cursor = conn.cursor()
@@ -10,7 +11,7 @@ def cadastrar_categoria(nome, pai_id=None):
     cursor.close()
     conn.close()
 
-
+# LISTAR CATEGORIA
 def listar_categorias():
     conn = conectar()
     cursor = conn.cursor(dictionary=True)
@@ -66,7 +67,11 @@ def buscar_id_por_nome(nome):
         return result["ID_Categoria"]
     return None
 
+# ATUALIZAR CATEGORIA
 
+
+
+# EXCLUIR CATEGORIA
 def excluir_categoria(id_categoria):
     conn = conectar()
     cursor = conn.cursor()

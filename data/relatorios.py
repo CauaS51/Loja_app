@@ -1,157 +1,256 @@
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import data.colors as colors
 from data.colors import *
 import data.sessao as sessao
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from datetime import datetime
+
+# Importação para buscar usuários reais do banco
+from crud.crud_cadastros import listar_cadastros
+
+# Bibliotecas para o Gráfico
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class RelatoriosApp:
     def __init__(self, app):
         self.app = app
+        
+        # 1. Busca dinâmica de usuários cadastrados
+        try:
+            usuarios_db = listar_cadastros()
+            self.usuarios_cadastrados = [u['nome'] for u in usuarios_db]
+        except Exception:
+            self.usuarios_cadastrados = []
+
+        # 2. Categorias vindas do repositorio.py
+        self.lista_categorias = [
+            "Hortifruti", "Açougue", "Peixaria", "Padaria", "Laticínios", 
+            "Mercearia", "Temperos", "Bebidas", "Biscoitos & Snacks", 
+            "Doces & Chocolates", "Congelados", "Limpeza", "Higiene Pessoal", 
+            "Bebês", "Pet Shop", "Utilidades Domésticas"
+        ]
+            
+        self.dados_filtrados = []
+        self.canvas_grafico = None 
         self.gerar_tela_relatorios()
 
     def gerar_tela_relatorios(self):
         for w in self.app.winfo_children():
             w.destroy()
 
-        self.app.title("Relatórios")
+        self.app.title("Sistema de Gestão - Relatórios & BI")
         cores = colors.get_colors()
 
         # === HEADER ===
         header = ctk.CTkFrame(self.app, fg_color=cores["PRIMARY"], height=80, corner_radius=0)
         header.pack(fill="x")
-        header.grid_columnconfigure(0, weight=0)  # botão voltar
-        header.grid_columnconfigure(1, weight=1)  # título
-        header.grid_columnconfigure(2, weight=0)  # tema
-
-        # BOTÃO VOLTAR
+        
         btn_voltar = ctk.CTkButton(
             header, text="⬅", width=40, height=40, font=ctk.CTkFont(size=20),
-            corner_radius=12, text_color=cores["TEXT_PRIMARY"], fg_color=cores["ENTRY_BG"], hover_color=cores["HOVER"],
-            command=self.voltar_menu
+            corner_radius=12, text_color=cores["TEXT_PRIMARY"], fg_color=cores["ENTRY_BG"], 
+            hover_color=cores["HOVER"], command=self.voltar_menu
         )
-        btn_voltar.grid(row=0, column=0, padx=20, pady=20, sticky="w")
-
-        # TÍTULO
-        title_label = ctk.CTkLabel(
-            header, text="📊 Relatórios de Vendas",
-            text_color="white",
-            font=ctk.CTkFont("Segoe UI", 26, "bold")
-        )
-        title_label.grid(row=0, column=1, padx=(0,30), pady=20, sticky="w")
-
-        #  BOTÃO ALTERNAR TEMA 
-        def alternar_tema():
-            colors.alternar_tema()
-            self.gerar_tela_relatorios()
-
-        icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "🔆"
-        theme_button = ctk.CTkButton(
-            header,
-            text=icone_tema,
-            width=40,
-            height=40,
-            corner_radius=12,
-            fg_color=cores["ENTRY_BG"],
-            hover_color=cores["HOVER"],
-            text_color=cores["TEXT_PRIMARY"],
-            font=ctk.CTkFont(size=25),
-            command=alternar_tema
-        )
-        theme_button.grid(row=0, column=2, padx=20, pady=20, sticky="e")
-
-        # === CONTEÚDO PRINCIPAL ===
-        main_frame = ctk.CTkFrame(self.app, fg_color=cores["BACKGROUND"], corner_radius=12)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=(10, 20))
-        main_frame.grid_columnconfigure(0, weight=1)
-        main_frame.grid_rowconfigure(3, weight=1) # Para o frame de resultados
-
-        # Seleção de Período
-        periodo_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        periodo_frame.grid(row=0, column=0, padx=20, pady=10, sticky="ew")
-        periodo_frame.grid_columnconfigure(0, weight=1)
-        periodo_frame.grid_columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(periodo_frame, text="Data Início:", text_color=cores["TEXT_PRIMARY"]).grid(row=0, column=0, sticky="w", padx=5)
-        self.entry_data_inicio = ctk.CTkEntry(periodo_frame, placeholder_text="DD/MM/AAAA", width=150)
-        self.entry_data_inicio.grid(row=1, column=0, sticky="w", padx=5)
-
-        ctk.CTkLabel(periodo_frame, text="Data Fim:", text_color=cores["TEXT_PRIMARY"]).grid(row=0, column=1, sticky="w", padx=5)
-        self.entry_data_fim = ctk.CTkEntry(periodo_frame, placeholder_text="DD/MM/AAAA", width=150)
-        self.entry_data_fim.grid(row=1, column=1, sticky="w", padx=5)
-
-        # Botão Gerar Relatório
-        btn_gerar_relatorio = ctk.CTkButton(
-            main_frame, text="Gerar Relatório",
-            fg_color=cores["PRIMARY"], hover_color=cores["HOVER"],
-            text_color="white", font=ctk.CTkFont(size=16, weight="bold"),
-            command=self.gerar_relatorio
-        )
-        btn_gerar_relatorio.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
-
-        # Área de exibição do relatório
-        self.report_display_frame = ctk.CTkScrollableFrame(main_frame, fg_color=cores["CARD_BG"], corner_radius=12)
-        self.report_display_frame.grid(row=3, column=0, padx=20, pady=10, sticky="nsew")
+        btn_voltar.pack(side="left", padx=20, pady=20)
 
         ctk.CTkLabel(
-            self.report_display_frame, text="Nenhum relatório gerado ainda.",
-            text_color=cores["TEXT_SECONDARY"], font=ctk.CTkFont(size=14)
-        ).pack(pady=20)
+            header, text="📊 Inteligência e Relatórios",
+            text_color="white", font=ctk.CTkFont("Segoe UI", 26, "bold")
+        ).pack(side="left", pady=20)
+
+        # === CONTEÚDO PRINCIPAL (SCROLLABLE) ===
+        main_scroll = ctk.CTkScrollableFrame(self.app, fg_color=cores["BACKGROUND"], corner_radius=0)
+        main_scroll.pack(fill="both", expand=True)
+
+        # SEÇÃO DE FILTROS
+        filtros_frame = ctk.CTkFrame(main_scroll, fg_color=cores["CARD_BG"], corner_radius=12)
+        filtros_frame.pack(fill="x", padx=20, pady=15)
+        filtros_frame.grid_columnconfigure((1, 3, 5), weight=1)
+
+        # Seleção do Tipo de Relatório (Vendas ou Estoque)
+        ctk.CTkLabel(filtros_frame, text="Relatório:", font=ctk.CTkFont(weight="bold")).grid(row=0, column=0, padx=5, pady=10)
+        self.combo_tipo_relatorio = ctk.CTkComboBox(filtros_frame, values=["Vendas", "Estoque"], command=self.ajustar_filtros)
+        self.combo_tipo_relatorio.set("Vendas")
+        self.combo_tipo_relatorio.grid(row=0, column=1, padx=5, pady=10, sticky="ew")
+
+        # Filtros de Data (Desativados se for Estoque)
+        ctk.CTkLabel(filtros_frame, text="Início:").grid(row=0, column=2, padx=5, pady=10)
+        self.entry_data_inicio = ctk.CTkEntry(filtros_frame, placeholder_text="DD/MM/AAAA")
+        self.entry_data_inicio.grid(row=0, column=3, padx=5, pady=10, sticky="ew")
+
+        ctk.CTkLabel(filtros_frame, text="Fim:").grid(row=0, column=4, padx=5, pady=10)
+        self.entry_data_fim = ctk.CTkEntry(filtros_frame, placeholder_text="DD/MM/AAAA")
+        self.entry_data_fim.grid(row=0, column=5, padx=5, pady=10, sticky="ew")
+
+        # Vendedor
+        ctk.CTkLabel(filtros_frame, text="Vendedor:").grid(row=1, column=0, padx=5, pady=10)
+        self.combo_usuario = ctk.CTkComboBox(filtros_frame, values=["Todos"] + self.usuarios_cadastrados)
+        self.combo_usuario.set("Todos")
+        self.combo_usuario.grid(row=1, column=1, padx=5, pady=10, sticky="ew")
+
+        # Pagamento
+        ctk.CTkLabel(filtros_frame, text="Pagamento:").grid(row=1, column=2, padx=5, pady=10)
+        self.combo_pagamento = ctk.CTkComboBox(filtros_frame, values=[
+            "Todos", "PIX", "Crédito", "Débito", "Dinheiro em espécie", 
+            "Ticket Alimentação (VA)", "Vale-Refeição (VR)"
+        ])
+        self.combo_pagamento.set("Todos")
+        self.combo_pagamento.grid(row=1, column=3, padx=5, pady=10, sticky="ew")
+
+        # Categoria (Importante para ambos os relatórios)
+        ctk.CTkLabel(filtros_frame, text="Categoria:").grid(row=1, column=4, padx=5, pady=10)
+        self.combo_categoria = ctk.CTkComboBox(filtros_frame, values=["Todos"] + self.lista_categorias)
+        self.combo_categoria.set("Todos")
+        self.combo_categoria.grid(row=1, column=5, padx=5, pady=10, sticky="ew")
+
+        # BOTÕES
+        btn_container = ctk.CTkFrame(main_scroll, fg_color="transparent")
+        btn_container.pack(fill="x", padx=20, pady=5)
+
+        ctk.CTkButton(btn_container, text="🔍 Gerar Relatório", fg_color=cores["PRIMARY"], command=self.gerar_relatorio).pack(side="left", expand=True, fill="x", padx=5)
+        ctk.CTkButton(btn_container, text="📄 Exportar PDF", fg_color="#27ae60", command=self.exportar_pdf).pack(side="left", expand=True, fill="x", padx=5)
+
+        # GRÁFICO E TABELA
+        self.chart_frame = ctk.CTkFrame(main_scroll, fg_color=cores["CARD_BG"], height=300, corner_radius=12)
+        self.chart_frame.pack(fill="x", padx=20, pady=10)
+
+        self.table_frame = ctk.CTkFrame(main_scroll, fg_color=cores["CARD_BG"], corner_radius=12)
+        self.table_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        self.data_container = ctk.CTkFrame(self.table_frame, fg_color="transparent")
+        self.data_container.pack(fill="both", expand=True, padx=10, pady=10)
+
+    def ajustar_filtros(self, escolha):
+        """Desativa filtros irrelevantes para o relatório de estoque."""
+        if escolha == "Estoque":
+            self.entry_data_inicio.configure(state="disabled")
+            self.entry_data_fim.configure(state="disabled")
+            self.combo_usuario.configure(state="disabled")
+            self.combo_pagamento.configure(state="disabled")
+        else:
+            self.entry_data_inicio.configure(state="normal")
+            self.entry_data_fim.configure(state="normal")
+            self.combo_usuario.configure(state="normal")
+            self.combo_pagamento.configure(state="normal")
 
     def voltar_menu(self):
         from data import menu
         menu.mostrar_menu(self.app, usuario=sessao.usuario, perfil=sessao.perfil)
 
-    def gerar_relatorio(self):
-        data_inicio_str = self.entry_data_inicio.get()
-        data_fim_str = self.entry_data_fim.get()
+    def obter_dados_base(self, tipo):
+        """Simula base de dados para Vendas ou Estoque."""
+        if tipo == "Vendas":
+            vendedor_padrao = self.usuarios_cadastrados[0] if self.usuarios_cadastrados else "Vendedor"
+            return [
+                {"data": "01/01", "valor": 450.0, "tipo": "PIX", "vendedor": vendedor_padrao, "categoria": "Hortifruti"},
+                {"data": "02/01", "valor": 890.0, "tipo": "Crédito", "vendedor": vendedor_padrao, "categoria": "Limpeza"},
+                {"data": "04/01", "valor": 1200.0, "tipo": "Ticket Alimentação (VA)", "vendedor": "Administrador", "categoria": "Açougue"},
+                {"data": "05/01", "valor": 600.0, "tipo": "Vale-Refeição (VR)", "vendedor": "Gerente", "categoria": "Padaria"},
+            ]
+        else: # Tipo Estoque
+            return [
+                {"produto": "Alface Hidropônica", "qtd": 50, "categoria": "Hortifruti", "valor_un": 3.50},
+                {"produto": "Pão Francês", "qtd": 200, "categoria": "Padaria", "valor_un": 0.50},
+                {"produto": "Detergente 500ml", "qtd": 15, "categoria": "Limpeza", "valor_un": 2.20},
+                {"produto": "Picanha KG", "qtd": 8, "categoria": "Açougue", "valor_un": 85.90},
+                {"produto": "Leite Integral", "qtd": 120, "categoria": "Laticínios", "valor_un": 5.40},
+            ]
 
-        # Validação de datas (simplificada para o exemplo)
-        if not data_inicio_str or not data_fim_str:
-            messagebox.showwarning("Aviso", "Por favor, preencha as datas de início e fim.")
+    def gerar_relatorio(self):
+        for w in self.data_container.winfo_children(): w.destroy()
+        if self.canvas_grafico: self.canvas_grafico.get_tk_widget().destroy()
+
+        tipo_rel = self.combo_tipo_relatorio.get()
+        categoria_sel = self.combo_categoria.get()
+        dados_brutos = self.obter_dados_base(tipo_rel)
+
+        # Lógica de Filtragem
+        if tipo_rel == "Vendas":
+            vendedor_sel = self.combo_usuario.get()
+            pagamento_sel = self.combo_pagamento.get()
+            self.dados_filtrados = [
+                item for item in dados_brutos
+                if (vendedor_sel == "Todos" or item['vendedor'] == vendedor_sel) and
+                   (pagamento_sel == "Todos" or item['tipo'] == pagamento_sel) and
+                   (categoria_sel == "Todos" or item['categoria'] == categoria_sel)
+            ]
+        else: # Estoque
+            self.dados_filtrados = [
+                item for item in dados_brutos
+                if (categoria_sel == "Todos" or item['categoria'] == categoria_sel)
+            ]
+
+        if not self.dados_filtrados:
+            ctk.CTkLabel(self.data_container, text="Nenhum dado encontrado.").pack(pady=20)
+            return
+
+        self.plotar_grafico(self.dados_filtrados, tipo_rel)
+        self.renderizar_tabela_tela(tipo_rel)
+
+    def renderizar_tabela_tela(self, tipo):
+        cores = colors.get_colors()
+        if tipo == "Vendas":
+            header = "Data | Vendedor | Pagamento | Categoria | Valor"
+            ctk.CTkLabel(self.data_container, text=header, font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=20)
+            for d in self.dados_filtrados:
+                txt = f"{d['data']} | {d['vendedor']} | {d['tipo']} | {d['categoria']} | R$ {d['valor']:.2f}"
+                ctk.CTkLabel(self.data_container, text=txt, text_color=cores["TEXT_PRIMARY"]).pack(anchor="w", padx=20)
+        else: # Estoque
+            header = "Produto | Categoria | Quantidade | Valor Un. | Total"
+            ctk.CTkLabel(self.data_container, text=header, font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=20)
+            for d in self.dados_filtrados:
+                total = d['qtd'] * d['valor_un']
+                txt = f"{d['produto']} | {d['categoria']} | {d['qtd']} un | R$ {d['valor_un']:.2f} | R$ {total:.2f}"
+                ctk.CTkLabel(self.data_container, text=txt, text_color=cores["TEXT_PRIMARY"]).pack(anchor="w", padx=20)
+
+    def plotar_grafico(self, dados, tipo):
+        fig, ax = plt.subplots(figsize=(8, 3), dpi=100)
+        
+        if tipo == "Vendas":
+            resumo = {}
+            for d in dados: resumo[d['data']] = resumo.get(d['data'], 0) + d['valor']
+            ax.plot(list(resumo.keys()), list(resumo.values()), marker='o', color='#3b8ed0')
+            ax.set_title("Evolução de Vendas")
+        else: # Estoque - Gráfico de Barras por Produto
+            produtos = [d['produto'] for d in dados]
+            quantidades = [d['qtd'] for d in dados]
+            ax.bar(produtos, quantidades, color='#27ae60')
+            ax.set_title("Nível de Estoque por Produto")
+            plt.xticks(rotation=15)
+
+        ax.grid(True, alpha=0.3)
+        self.canvas_grafico = FigureCanvasTkAgg(fig, master=self.chart_frame)
+        self.canvas_grafico.draw()
+        self.canvas_grafico.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+        plt.close(fig)
+
+    def exportar_pdf(self):
+        if not self.dados_filtrados:
+            messagebox.showwarning("Aviso", "Não há dados para exportar.")
             return
         
-        # Limpa a área de exibição anterior
-        for w in self.report_display_frame.winfo_children():
-            w.destroy()
-
-        cores = colors.get_colors()
-
-        # Exemplo de conteúdo do relatório
-        ctk.CTkLabel(
-            self.report_display_frame, text=f"Relatório de Vendas de {data_inicio_str} a {data_fim_str}",
-            font=ctk.CTkFont(size=18, weight="bold"), text_color=cores["PRIMARY"]
-        ).pack(pady=10)
-
-        # Relatórios financeiros (fluxo de caixa)
-        ctk.CTkLabel(self.report_display_frame, text="Fluxo de Caixa: Entradas e Saídas", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=5)
-        fluxo_caixa_data = [
-            {"entrada": "Venda Produto A", "valor": 500},
-            {"saida": "Pagamento Fornecedor", "valor": 300},
-        ]
-        for item in fluxo_caixa_data:
-            ctk.CTkLabel(self.report_display_frame, text=f"{item['entrada' if 'entrada' in item else 'saida']}: R$ {item['valor']:.2f}",
-                         font=ctk.CTkFont(size=14), text_color=cores["TEXT_PRIMARY"]).pack(pady=5)
-        
-        # Relatório de Lucratividade
-        ctk.CTkLabel(self.report_display_frame, text="Lucratividade: Análise por produto", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=5)
-        lucratividade_data = [
-            {"produto": "Produto A", "lucro": 100},
-            {"produto": "Produto B", "lucro": 150},
-        ]
-        for item in lucratividade_data:
-            ctk.CTkLabel(self.report_display_frame, text=f"{item['produto']}: R$ {item['lucro']:.2f}",
-                         font=ctk.CTkFont(size=14), text_color=cores["TEXT_PRIMARY"]).pack(pady=5)
-
-        # Formas de pagamento
-        ctk.CTkLabel(self.report_display_frame, text="Formas de Pagamento", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=5)
-        pagamentos_data = [
-            {"forma": "Crédito", "valor": 600},
-            {"forma": "Débito", "valor": 400},
-            {"forma": "PIX", "valor": 500},
-        ]
-        for item in pagamentos_data:
-            ctk.CTkLab
+        tipo = self.combo_tipo_relatorio.get()
+        caminho = filedialog.asksaveasfilename(defaultextension=".pdf")
+        if caminho:
+            c = canvas.Canvas(caminho, pagesize=letter)
+            c.setFont("Helvetica-Bold", 14)
+            c.drawString(100, 750, f"RELATÓRIO DE {tipo.upper()} - {datetime.now().strftime('%d/%m/%Y')}")
+            c.setFont("Helvetica", 10)
+            y = 720
+            
+            for d in self.dados_filtrados:
+                if tipo == "Vendas":
+                    txt = f"{d['data']} - {d['vendedor']} - {d['categoria']} - R$ {d['valor']:.2f}"
+                else:
+                    txt = f"{d['produto']} ({d['categoria']}) - Qtd: {d['qtd']} - Un: R$ {d['valor_un']:.2f}"
+                
+                c.drawString(100, y, txt)
+                y -= 20
+                if y < 50: c.showPage(); y = 750
+            
+            c.save()
+            messagebox.showinfo("Sucesso", "PDF exportado!")
 
 def mostrar_relatorios(app):
     RelatoriosApp(app)
-

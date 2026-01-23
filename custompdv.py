@@ -1,23 +1,15 @@
+import sys
+sys.dont_write_bytecode = True #ignorar pycache
+
 import customtkinter as ctk
 from tkinter import messagebox
 from PIL import Image
 import data.colors as colors
 from data.colors import *
-import data.menu as menu
+from data import loja
 import data.cadastro as cadastro
 import data.sessao as sessao
-import mysql.connector
 
-# =======================
-# CONEXÃO COM BANCO MYSQL
-# =======================
-def conectar_banco():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",  # altere conforme seu MySQL
-        password="",  # troque pela sua senha real
-        database="loja_db"
-    )
 
 # === MODO CLARO PADRÃO ===
 ctk.set_appearance_mode("light")
@@ -30,7 +22,7 @@ def mostrar_login(app):
     ctk.set_default_color_theme("blue")
 
     # CONFIGURAÇÃO GRID PRINCIPAL
-    app.title("Sistema Supermercado") 
+    app.title("Custom-PDV") 
     app.geometry("1200x700")
     app.minsize(900, 500)
     app.grid_rowconfigure(0, weight=1)
@@ -53,7 +45,7 @@ def mostrar_login(app):
     login_container.grid(row=1, column=0, sticky="nsew")
 
     # TÍTULOS
-    ctk.CTkLabel(login_container, text="🏬 SUPERMERCADO", font=("Comfortaa", 35, "bold"),
+    ctk.CTkLabel(login_container, text="🏬 CUSTOM PDV", font=("Comfortaa", 40, "bold"),
                  text_color=cores["TEXT_PRIMARY"]).pack(pady=(50,50))
     ctk.CTkLabel(login_container, text="BEM VINDO!", font=("Comfortaa", 40, "bold"),
                  text_color=cores["TEXT_PRIMARY"]).pack(pady=(0,10), padx=(0,60))
@@ -78,6 +70,7 @@ def mostrar_login(app):
     # ==================
     # FUNÇÃO LOGIN
     # ==================
+    from data.conexao import conectar
     def on_login():
         login_input = entry_user.get().strip()
         pwd_input  = entry_pass.get().strip()
@@ -87,13 +80,12 @@ def mostrar_login(app):
             return
     
         try:
-            conn = conectar_banco()
+            conn = conectar()
             cursor = conn.cursor(dictionary=True)
             query = """
-            SELECT Funcionarios.Nome, Funcionarios.Login, Perfis.Nome_Perfil 
-            FROM Funcionarios  
-            LEFT JOIN Perfis ON Funcionarios.ID_Perfil = Perfis.ID_Perfil
-            WHERE Funcionarios.Login = %s AND Funcionarios.Senha = %s
+            SELECT Contas.ID_Conta, Contas.Nome, Contas.Login
+            FROM Contas 
+            WHERE Contas.Login = %s AND Contas.Senha = %s
             """
             cursor.execute(query, (login_input, pwd_input))
             resultado = cursor.fetchone()
@@ -101,15 +93,19 @@ def mostrar_login(app):
             conn.close()
         
             if resultado:
-                sessao.usuario = resultado['Nome']
-                sessao.perfil = resultado['Nome_Perfil']
-                
-                messagebox.showinfo("Sucesso", f"Bem-vindo, {sessao.usuario}!\nPerfil: {sessao.perfil}")
+                sessao.usuario_id = resultado["ID_Conta"]
+                sessao.nome = resultado["Nome"]
+                sessao.usuario = resultado["Login"]
+
+                messagebox.showinfo("Sucesso", f"Bem-vindo, {sessao.nome}!")
                 
                 for w in app.winfo_children():
                     w.destroy()
 
-                menu.mostrar_menu(app, usuario=sessao.usuario, perfil=sessao.perfil)  # Passa o dicionário user
+                # Abrir a tela de seleção de lojas
+                loja.mostrar_lojas(app)
+
+                # menu.mostrar_menu(app, usuario=sessao.usuario, perfil=sessao.perfil)  # Passa o dicionário user
             else:
                 messagebox.showerror("Erro", "Usuário ou senha incorretos.")
         except Exception as e:

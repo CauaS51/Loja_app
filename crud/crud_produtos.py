@@ -1,7 +1,7 @@
 from data.conexao import conectar
 from crud.crud_categorias import buscar_id_por_nome
 
-# Cadastrar produto
+# CADASTRAR PRODUTO
 def cadastrar_produto(nome, preco, img, categoria_nome):
     con = conectar()
     if con is None:
@@ -24,7 +24,7 @@ def cadastrar_produto(nome, preco, img, categoria_nome):
         con.close()
 
 
-# Listar produtos (com nome da categoria/subcategoria)
+# LISTAR PRODUTOS
 def listar_produtos(filtro_categoria_id=None, pesquisa=None):
     con = conectar()
     if con is None:
@@ -60,7 +60,7 @@ def listar_produtos(filtro_categoria_id=None, pesquisa=None):
         con.close()
 
 
-# Atualizar produto
+# ATUALIZAR PRODUTOS
 def atualizar_produto(codigo, nome, preco, img, categoria_nome):
     con = conectar()
     if con is None:
@@ -82,7 +82,7 @@ def atualizar_produto(codigo, nome, preco, img, categoria_nome):
         con.close()
 
 
-# Excluir produto
+# EXCLUIR PRODUTO
 def excluir_produto(id_produto):
     con = conectar()
     if con is None:

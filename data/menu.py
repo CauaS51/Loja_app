@@ -11,7 +11,7 @@ import data.sessao as sessao
 
 # === PERFIS ===
 PROFILES = {
-    "Desenvolvedor": {"Caixa": True, "Repositório": True, "Relatórios": True, "Cadastros": True},
+    "Administrador": {"Caixa": True, "Repositório": True, "Relatórios": True, "Cadastros": True},
     "Caixa": {"Caixa": True, "Repositório": False, "Relatórios": False, "Cadastros": False},
     "Repositor": {"Caixa": False, "Repositório": True, "Relatórios": False, "Cadastros": False},
     "Gestor de Dados": {"Caixa": False, "Repositório": False, "Relatórios": True, "Cadastros": True}
@@ -139,8 +139,10 @@ def mostrar_menu(app, usuario, perfil):
         if messagebox.askyesno("Sair", "Deseja realmente sair?"):
             sessao.usuario = None
             sessao.perfil = None
+            sessao.login_global = None
+            sessao.usuario_id = None
 
-            from loja import mostrar_login
+            from custompdv import mostrar_login
             mostrar_login(app)
     ctk.CTkButton(user_frame, text="Sair", command=logout, width=70).pack(padx=(10,10),side="left")
 
@@ -161,16 +163,16 @@ def mostrar_menu(app, usuario, perfil):
     cards_frame.grid_columnconfigure((0,1), weight=1)
     cards_frame.grid_rowconfigure((0,1), weight=1)
 
-    card_caixa = Card(cards_frame, "Caixa", CARD_CAIXA_COLOR, "🛒", command=lambda name="Caixa": abrir_caixa(app))
+    card_caixa = Card(cards_frame, "Caixa", cores["CARD_CAIXA"], "🛒", command=lambda name="Caixa": abrir_caixa(app))
     card_caixa.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
-    
-    card_estoque = Card(cards_frame, "Repositório", CARD_ESTOQUE_COLOR,"📦", command=lambda name="Repositório": abrir_repositorio(app))
+
+    card_estoque = Card(cards_frame, "Repositório", cores["CARD_ESTOQUE"],"📦", command=lambda name="Repositório": abrir_repositorio(app))
     card_estoque.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
-    
-    card_relatorios = Card(cards_frame, "Relatórios", CARD_RELATORIOS_COLOR, "📊", command=lambda name="Relatórios": mostrar_relatorios(app))
+
+    card_relatorios = Card(cards_frame, "Relatórios", cores["CARD_RELATORIOS"], "📊", command=lambda name="Relatórios": mostrar_relatorios(app))
     card_relatorios.grid(row=1, column=0, padx=20, pady=20, sticky="nsew")
-    
-    card_cadastros = Card(cards_frame, "Cadastros", CARD_CADASTROS_COLOR, "👥", command=lambda name="Cadastros": abrir_cadastros(app))
+
+    card_cadastros = Card(cards_frame, "Cadastros", cores["CARD_CADASTROS"], "👥", command=lambda name="Cadastros": abrir_cadastros(app))
     card_cadastros.grid(row=1, column=1, padx=20, pady=20, sticky="nsew")
 
     cards = {
