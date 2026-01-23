@@ -1,6 +1,6 @@
 from data.conexao import conectar
 
-# FUNÇÃO CADASTRAR USUÁRIO
+# CADASTRAR USUÁRIO
 def cadastrar_usuario(Nome, Login, Senha, ID_Perfil):
     con = conectar()
     if con is None:
@@ -34,7 +34,7 @@ def cadastrar_usuario(Nome, Login, Senha, ID_Perfil):
         con.close()
 
 
-# FUNÇÃO LISTAR USUÁRIOS
+# LISTAR USUÁRIOS
 def listar_cadastros():
     con = conectar()
     if con is None:
@@ -64,7 +64,10 @@ def listar_cadastros():
     finally:
         con.close()
 
-# FUNÇÃO EXCLUIR USUÁRIO
+# ATUALIZAR USUÁRIO
+
+
+# EXCLUIR USUÁRIO
 def excluir_usuario(id_funcionario):
     con = conectar()
     if con is None:
