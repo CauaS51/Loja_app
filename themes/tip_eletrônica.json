@@ -1,0 +1,19 @@
+{
+    "LOGO": "🏬",
+    "HOVER": "#E2B539",
+    "CARD_BG": "#FFFFFF",
+    "PRIMARY": "#0080ff",
+    "ENTRY_BG": "#E0E0E0",
+    "LOGO_IMG": "C:/Users/59380076/Downloads/tip_logo.png",
+    "DESCRICAO": "",
+    "NOME_LOJA": "Tip Eletrônica",
+    "SECONDARY": "#f5d80a",
+    "BACKGROUND": "#b5b5b5",
+    "CARD_CAIXA": "#0080ff",
+    "BACKGROUND_2": "#FFFFFF",
+    "CARD_ESTOQUE": "#0080ff",
+    "TEXT_PRIMARY": "#333333",
+    "CARD_CADASTROS": "#0080ff",
+    "TEXT_SECONDARY": "#666666",
+    "CARD_RELATORIOS": "#0080ff"
+}

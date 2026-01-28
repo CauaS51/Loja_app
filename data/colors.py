@@ -2,7 +2,9 @@ import customtkinter as ctk
 import json
 import os
 
-# Tema padrão interno (fallback)
+# ==========================
+# TEMA PADRÃO (FALLBACK)
+# ==========================
 TEMA_PADRAO = {
     "Light": {
         "PRIMARY": "#E98C41",
@@ -38,8 +40,8 @@ TEMA_PADRAO = {
     }
 }
 
-# Tema ativo
-TEMA_ATUAL = TEMA_PADRAO
+# Tema customizado da loja (vem do banco ou arquivo)
+TEMA_ATUAL = None
 
 
 # ==========================
@@ -49,8 +51,8 @@ def carregar_tema(path):
     global TEMA_ATUAL
 
     if not os.path.exists(path):
-        print("Tema não encontrado, usando padrão.")
-        TEMA_ATUAL = TEMA_PADRAO
+        print("Tema não encontrado, usando apenas padrão.")
+        TEMA_ATUAL = None
         return
 
     with open(path, "r", encoding="utf-8") as f:
@@ -58,25 +60,56 @@ def carregar_tema(path):
 
 
 # ==========================
-# SALVAR TEMA DA LOJA
+# SALVAR TEMA EM ARQUIVO
 # ==========================
 def salvar_tema(path, tema_dict):
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(tema_dict, f, indent=4)
+        json.dump(tema_dict, f, indent=4, ensure_ascii=False)
 
 
 # ==========================
-# CORES ATUAIS
+# OBTER CORES ATUAIS
 # ==========================
 def get_colors():
     modo = ctk.get_appearance_mode()  # "Light" ou "Dark"
-    return TEMA_ATUAL.get(modo, TEMA_PADRAO[modo])
+
+    # Sempre começa com o tema padrão
+    cores_base = TEMA_PADRAO[modo].copy()
+
+    # Se houver tema customizado da loja, faz merge
+    if TEMA_ATUAL and modo in TEMA_ATUAL:
+        cores_base.update(TEMA_ATUAL[modo])
+
+    return cores_base
 
 
 # ==========================
-# ALTERNAR TEMA LIGHT/DARK
+# ALTERNAR MODO LIGHT/DARK
 # ==========================
 def alternar_tema():
     modo_atual = ctk.get_appearance_mode()
     ctk.set_appearance_mode("Light" if modo_atual == "Dark" else "Dark")
 
+
+# ==========================
+# APLICAR TEMA VINDO DO BANCO
+# ==========================
+def aplicar_tema_customizado(tema_dict):
+    global TEMA_ATUAL
+
+    try:
+        # Se vier como string JSON do banco
+        if isinstance(tema_dict, str):
+            tema_dict = json.loads(tema_dict)
+
+        # Se já vier no formato Light/Dark
+        if "Light" in tema_dict or "Dark" in tema_dict:
+            TEMA_ATUAL = tema_dict
+        else:
+            # Se vier só um dicionário simples de cores
+            modo = ctk.get_appearance_mode()
+            TEMA_ATUAL = {modo: tema_dict}
+
+    except Exception as e:
+        print("Erro ao aplicar tema customizado:", e)
+        TEMA_ATUAL = None

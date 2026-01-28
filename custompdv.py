@@ -159,11 +159,11 @@ def mostrar_login(app):
     if ctk.get_appearance_mode() == "Dark":
         logo_image = ctk.CTkImage(light_image=Image.open("images/logo_loja_dark.png"),
                                 dark_image=Image.open("images/logo_loja_dark.png"),
-                                size=(400, 330))
+                                size=(400, 380))
     else:
         logo_image = ctk.CTkImage(light_image=Image.open("images/logo_loja.png"),
                                 dark_image=Image.open("images/logo_loja.png"),
-                                size=(400, 330))
+                                size=(400, 380))
     
     ctk.CTkLabel(frame_right, image=logo_image, text="").grid(row=1, column=0)
 
@@ -246,7 +246,7 @@ def mostrar_login(app):
             sep.pack(side="left", padx=1)
 
     # RODAPÉ INFORMAÇÕES DE CONTATO
-    ctk.CTkLabel(frame_footer, text="\n📞 (91)98765-4321   🌐 www.projetoloja.com",
+    ctk.CTkLabel(frame_footer, text="\n📞 (91)98765-4321   🌐 www.custompdv.com",
                  text_color="#FFFFFF", font=("Arial", 14, "bold")).pack(expand=True, pady=(0,50))
 
 # === MAIN ===

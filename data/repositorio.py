@@ -258,7 +258,7 @@ class Repositorio:
             from custompdv import mostrar_login
             mostrar_login(self.app)
         else:
-            menu.mostrar_menu(self.app, usuario=sessao.usuario, perfil=sessao.perfil)
+            menu.mostrar_menu(self.app, usuario=sessao.nome, perfil=sessao.perfil)
 
 
 # === CLASSE CATEGORIAS ===

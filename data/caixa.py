@@ -52,7 +52,7 @@ class CaixaApp:
 
         def voltar():
             from data import menu
-            menu.mostrar_menu(self.app, sessao.usuario, sessao.perfil)
+            menu.mostrar_menu(self.app, sessao.nome, sessao.perfil)
 
         ctk.CTkButton(
             header, text="⬅", width=40, height=40, corner_radius=12,

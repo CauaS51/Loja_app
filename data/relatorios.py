@@ -136,7 +136,7 @@ class RelatoriosApp:
 
     def voltar_menu(self):
         from data import menu
-        menu.mostrar_menu(self.app, usuario=sessao.usuario, perfil=sessao.perfil)
+        menu.mostrar_menu(self.app, usuario=sessao.nome, perfil=sessao.perfil)
 
     def obter_dados_base(self, tipo):
         """Simula base de dados para Vendas ou Estoque."""

@@ -1,0 +1,19 @@
+{
+    "LOGO": "🏬",
+    "HOVER": "#c0c0c0",
+    "CARD_BG": "#FFFFFF",
+    "PRIMARY": "#ff3535",
+    "ENTRY_BG": "#E0E0E0",
+    "LOGO_IMG": "C:/Users/59380076/Downloads/lider_logo.png",
+    "DESCRICAO": "",
+    "NOME_LOJA": "Líder",
+    "SECONDARY": "#d70428",
+    "BACKGROUND": "#F5F5F5",
+    "CARD_CAIXA": "#ff3535",
+    "BACKGROUND_2": "#FFFFFF",
+    "CARD_ESTOQUE": "#ff3535",
+    "TEXT_PRIMARY": "#333333",
+    "CARD_CADASTROS": "#ff3535",
+    "TEXT_SECONDARY": "#666666",
+    "CARD_RELATORIOS": "#ff3535"
+}
