@@ -8,33 +8,29 @@ USE loja_db;
 -- =========================================
 -- TABELA: LOJAS
 -- =========================================
-DROP TABLE IF EXISTS Lojas;
 CREATE TABLE Lojas (
     ID_Loja INT AUTO_INCREMENT PRIMARY KEY,
     Nome_Loja VARCHAR(150) NOT NULL,
-    Img VARCHAR(255) NULL
+    Img VARCHAR(255)
 );
 
 -- =========================================
--- TABELA: TEMAS_LOJAS
+-- TABELA: TEMAS DAS LOJAS
 -- =========================================
-DROP TABLE IF EXISTS Temas_Lojas;
 CREATE TABLE Temas_Lojas (
     ID_Loja INT PRIMARY KEY,
     Tema_JSON JSON NOT NULL,
-    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja)
+    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE
 );
 
 -- =========================================
 -- TABELA: PERFIS
 -- =========================================
-DROP TABLE IF EXISTS Perfis;
 CREATE TABLE Perfis (
     ID_Perfil INT AUTO_INCREMENT PRIMARY KEY,
     Nome_Perfil VARCHAR(50) NOT NULL
 );
 
--- Inserir Perfis
 INSERT INTO Perfis (Nome_Perfil) VALUES
 ('Administrador'),
 ('Caixa'),
@@ -42,57 +38,48 @@ INSERT INTO Perfis (Nome_Perfil) VALUES
 ('Gestor de Dados');
 
 -- =========================================
--- TABELA: CONTAS
+-- TABELA: CONTAS (LOGIN DO SISTEMA)
 -- =========================================
-DROP TABLE IF EXISTS Contas;
 CREATE TABLE Contas (
     ID_Conta INT AUTO_INCREMENT PRIMARY KEY,
     Nome VARCHAR(100) NOT NULL,
     Login VARCHAR(50) UNIQUE NOT NULL,
-    Senha VARCHAR(100) NOT NULL
+    Senha VARCHAR(255) NOT NULL, -- espaço para hash
+    Email VARCHAR(150) NOT NULL,
+    Telefone VARCHAR(20),
+    CPF VARCHAR(14) UNIQUE NOT NULL,
+    Data_Cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Inserir Contas
-INSERT INTO Contas (Nome, Login, Senha) VALUES
-('Isaac Amaral', 'isaac.amaral', '123'),
-('Romulo Silva', 'romulo.silva', '123'), 
-('Cauã Sérgio', 'caua.sergio', '123'); 
-
 -- =========================================
--- TABELA: FUNCIONARIOS_LOJA
+-- FUNCIONÁRIOS VINCULADOS À LOJA
 -- =========================================
-DROP TABLE IF EXISTS Funcionarios_Loja;
 CREATE TABLE Funcionarios_Loja (
     ID_Funcionario INT AUTO_INCREMENT PRIMARY KEY,
     ID_Conta INT NOT NULL,
     ID_Loja INT NOT NULL,
     ID_Perfil INT NOT NULL,
-    UNIQUE (ID_Conta, ID_Loja), -- evita duplicar funcionário na mesma loja
-    FOREIGN KEY (ID_Conta) REFERENCES Contas(ID_Conta),
-    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja),
+    UNIQUE (ID_Conta, ID_Loja),
+    FOREIGN KEY (ID_Conta) REFERENCES Contas(ID_Conta) ON DELETE CASCADE,
+    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE,
     FOREIGN KEY (ID_Perfil) REFERENCES Perfis(ID_Perfil)
 );
 
-
-
-
 -- =========================================
--- TABELA: CATEGORIAS
+-- CATEGORIAS DE PRODUTOS
 -- =========================================
-DROP TABLE IF EXISTS Categorias;
 CREATE TABLE Categorias (
     ID_Categoria INT AUTO_INCREMENT PRIMARY KEY,
     ID_Loja INT NOT NULL,
     Nome VARCHAR(150) NOT NULL,
     Pai_ID INT DEFAULT NULL,
-    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja),
-    FOREIGN KEY (Pai_ID) REFERENCES Categorias(ID_Categoria)
+    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE,
+    FOREIGN KEY (Pai_ID) REFERENCES Categorias(ID_Categoria) ON DELETE SET NULL
 );
 
 -- =========================================
--- TABELA: PRODUTOS
+-- PRODUTOS
 -- =========================================
-DROP TABLE IF EXISTS Produtos;
 CREATE TABLE Produtos (
     ID_Produto INT AUTO_INCREMENT PRIMARY KEY,
     ID_Loja INT NOT NULL,
@@ -101,21 +88,20 @@ CREATE TABLE Produtos (
     Categoria_ID INT DEFAULT NULL,
     Img VARCHAR(255),
     Ativo BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja),
-    FOREIGN KEY (Categoria_ID) REFERENCES Categorias(ID_Categoria)
+    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE,
+    FOREIGN KEY (Categoria_ID) REFERENCES Categorias(ID_Categoria) ON DELETE SET NULL
 );
 
 -- =========================================
--- TABELA: RELATORIOS
+-- RELATÓRIOS
 -- =========================================
-DROP TABLE IF EXISTS Relatorios;
 CREATE TABLE Relatorios (
     ID_Relatorio INT AUTO_INCREMENT PRIMARY KEY,
     ID_Loja INT NOT NULL,
-    ID_Funcionario INT,
+    ID_Conta INT,
     Data_inicio DATETIME,
     Data_fim DATETIME,
     Tipo VARCHAR(50),
-    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja),
-    FOREIGN KEY (ID_Funcionario) REFERENCES Contas(ID_Conta)
+    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE,
+    FOREIGN KEY (ID_Conta) REFERENCES Contas(ID_Conta) ON DELETE SET NULL
 );

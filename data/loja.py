@@ -418,13 +418,27 @@ class LojaApp:
         )
 
     def entrar_loja(self):
-        loja_id = simpledialog.askinteger("Entrar em Loja","Digite o ID da loja:")
-        if not loja_id: return
-        loja = crud_lojas.entrar_em_loja(loja_id, sessao.usuario_id)
-        if not loja:
-            messagebox.showwarning("Aviso","Você não possui acesso a essa loja.")
+        loja_id = simpledialog.askinteger("Entrar em Loja", "Digite o ID da loja:")
+        if not loja_id:
             return
+
+        loja = crud_lojas.entrar_em_loja(loja_id, sessao.usuario_id)
+
+        if not loja:
+            criado = crud_lojas.associar_usuario_a_loja(
+                sessao.usuario_id,
+                loja_id,
+                "Caixa"  # perfil padrão ao entrar em loja existente
+            )
+
+            if not criado:
+                messagebox.showerror("Erro", "Loja não encontrada ou falha ao acessar.")
+                return
+
+            loja = crud_lojas.entrar_em_loja(loja_id, sessao.usuario_id)
+
         self.carregar_sessao_loja(loja)
+
 
     def entrar_loja_id(self, loja):
         self.carregar_sessao_loja(loja)

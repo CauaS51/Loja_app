@@ -104,7 +104,7 @@ def aplicar_permissoes(cards, profile_name):
 
 # --- FUNÇÕES DE ABERTURA DE MÓDULOS ---
 def abrir_caixa(app): caixa.mostrar_menu(app)
-def abrir_cadastros(app): cadastro.abrir_cadastro(app)
+def abrir_cadastros(app): cadastro.listar_funcionarios(app)
 def mostrar_relatorios(app): relatorios.mostrar_relatorios(app) 
 def abrir_repositorio(app): repositorio.abrir_repositorio(app)
 

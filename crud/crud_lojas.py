@@ -144,24 +144,59 @@ def entrar_em_loja(id_loja, id_conta):
 
     try:
         cursor = con.cursor(dictionary=True)
+
+        # 1️⃣ Verifica se a loja existe
+        cursor.execute("SELECT ID_Loja, Nome_Loja FROM Lojas WHERE ID_Loja = %s", (id_loja,))
+        loja = cursor.fetchone()
+
+        if not loja:
+            return None  # Loja não existe
+
+        # 2️⃣ Verifica se usuário já pertence à loja
         cursor.execute("""
             SELECT 
-                Lojas.ID_Loja AS id,
-                Lojas.Nome_Loja AS nome,
-                Perfis.Nome_Perfil AS perfil,
-                Funcionarios_Loja.ID_Funcionario AS id_funcionario
+                Funcionarios_Loja.ID_Funcionario AS id_funcionario,
+                Perfis.Nome_Perfil AS perfil
             FROM Funcionarios_Loja
-            JOIN Lojas ON Lojas.ID_Loja = Funcionarios_Loja.ID_Loja
             JOIN Perfis ON Perfis.ID_Perfil = Funcionarios_Loja.ID_Perfil
             WHERE Funcionarios_Loja.ID_Loja = %s
               AND Funcionarios_Loja.ID_Conta = %s
         """, (id_loja, id_conta))
-        return cursor.fetchone()
+
+        vinculo = cursor.fetchone()
+
+        # 3️⃣ Se NÃO estiver vinculado, adiciona como CAIXA automaticamente
+        if not vinculo:
+            cursor.execute("SELECT ID_Perfil FROM Perfis WHERE Nome_Perfil='Caixa'")
+            perfil = cursor.fetchone()
+
+            cursor.execute("""
+                INSERT INTO Funcionarios_Loja (ID_Conta, ID_Loja, ID_Perfil)
+                VALUES (%s, %s, %s)
+            """, (id_conta, id_loja, perfil["ID_Perfil"]))
+            con.commit()
+
+            id_funcionario = cursor.lastrowid
+            nome_perfil = "Caixa"
+        else:
+            id_funcionario = vinculo["id_funcionario"]
+            nome_perfil = vinculo["perfil"]
+
+        # 4️⃣ Retorna dados para a sessão
+        return {
+            "id": loja["ID_Loja"],
+            "nome": loja["Nome_Loja"],
+            "id_funcionario": id_funcionario,
+            "perfil": nome_perfil
+        }
+
     except Exception as e:
         print("Erro ao entrar na loja:", e)
         return None
+
     finally:
         con.close()
+
 
 
 # ==========================

@@ -71,46 +71,52 @@ def mostrar_login(app):
     # FUNÇÃO LOGIN
     # ==================
     from data.conexao import conectar
+    from data.criptografia import verificar_senha
     def on_login():
-        login_input = entry_user.get().strip()
+        login_input = entry_user.get().strip().lower()
         pwd_input  = entry_pass.get().strip()
 
         if not login_input or not pwd_input:
             messagebox.showwarning("Atenção", "Informe usuário e senha.")
             return
-    
+
         try:
             conn = conectar()
             cursor = conn.cursor(dictionary=True)
+
+            # 🔍 BUSCA APENAS PELO LOGIN
             query = """
-            SELECT Contas.ID_Conta, Contas.Nome, Contas.Login
-            FROM Contas 
-            WHERE Contas.Login = %s AND Contas.Senha = %s
+                SELECT ID_Conta, Nome, Login, Senha
+                FROM Contas
+                WHERE Login = %s
             """
-            cursor.execute(query, (login_input, pwd_input))
-            resultado = cursor.fetchone()
+            cursor.execute(query, (login_input,))
+            user = cursor.fetchone()
+
             cursor.close()
             conn.close()
-        
-            if resultado:
-                sessao.usuario_id = resultado["ID_Conta"]
-                sessao.nome = resultado["Nome"]
-                sessao.usuario = resultado["Login"]
+
+            # 🔐 VERIFICA HASH
+            
+            if user and verificar_senha(pwd_input, user["Senha"]):
+                sessao.usuario_id = user["ID_Conta"]
+                sessao.nome = user["Nome"]
+                sessao.usuario = user["Login"]
 
                 messagebox.showinfo("Sucesso", f"Bem-vindo, {sessao.nome}!")
-                
+
                 for w in app.winfo_children():
                     w.destroy()
 
-                # Abrir a tela de seleção de lojas
                 loja.mostrar_lojas(app)
 
-                # menu.mostrar_menu(app, usuario=sessao.usuario, perfil=sessao.perfil)  # Passa o dicionário user
             else:
                 messagebox.showerror("Erro", "Usuário ou senha incorretos.")
+
         except Exception as e:
-            messagebox.showerror("Erro de conexão", f"Falha ao conectar ao banco:\n{str(e)}")
-            print(f"Erro completo: {e}")  # Log to console
+            print("Erro login:", e)
+            messagebox.showerror("Erro", "Não foi possível conectar ao servidor.")
+
 
     # BOTÃO LOGIN        
     ctk.CTkButton(login_container, text="Entrar", font=("Arial", 15, "bold"),
@@ -119,7 +125,7 @@ def mostrar_login(app):
 
     # BOTÃO CADASTRO
     def abrir_cadastro():
-        cadastro.cadastro_login(app)
+        cadastro.abrir_cadastro(app)
     ctk.CTkButton(login_container, text="Cadastre-se", font=("Arial", 15, "bold"),
                   width=300, height=45, corner_radius=10,
                   fg_color="transparent", hover_color=cores["HOVER"],

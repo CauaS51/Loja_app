@@ -2,27 +2,23 @@ from data.conexao import conectar
 from crud.crud_categorias import buscar_id_por_nome
 import data.sessao as sessao
 
-
 # ==========================
 # CADASTRAR PRODUTO
 # ==========================
 def cadastrar_produto(nome, preco, img, categoria_nome):
-    con = conectar()
-    if con is None:
+    if sessao.loja_id is None:
+        print("Sessão sem loja.")
         return None
 
+    con = conectar()
     categoria_id = buscar_id_por_nome(categoria_nome)
-    loja_id = sessao.loja_id  # 🔥 Loja ativa da sessão
-
     cursor = con.cursor()
+
     try:
-        cursor.execute(
-            """
+        cursor.execute("""
             INSERT INTO Produtos (ID_Loja, Nome, Preco, Categoria_ID, Img)
             VALUES (%s, %s, %s, %s, %s)
-            """,
-            (loja_id, nome, preco, categoria_id, img)
-        )
+        """, (sessao.loja_id, nome, preco, categoria_id, img))
         con.commit()
         return cursor.lastrowid
     except Exception as e:
@@ -35,42 +31,26 @@ def cadastrar_produto(nome, preco, img, categoria_nome):
 # ==========================
 # LISTAR PRODUTOS DA LOJA
 # ==========================
-def listar_produtos(filtro_categoria_id=None, pesquisa=None):
-    con = conectar()
-    if con is None:
+def listar_produtos():
+    if sessao.loja_id is None:
         return []
 
-    loja_id = sessao.loja_id
+    con = conectar()
     cursor = con.cursor(dictionary=True)
 
     try:
-        comando = """
-            SELECT 
-                p.ID_Produto AS codigo,
-                p.Nome AS nome,
-                p.Preco AS preco,
-                p.Img AS img,
-                c.Nome AS categoria,
-                c.Pai_ID AS categoria_pai
+        cursor.execute("""
+            SELECT p.ID_Produto AS codigo,
+                   p.Nome AS nome,
+                   p.Preco AS preco,
+                   p.Img AS img,
+                   c.Nome AS categoria
             FROM Produtos p
             LEFT JOIN Categorias c ON p.Categoria_ID = c.ID_Categoria
             WHERE p.ID_Loja = %s
-        """
-        valores = [loja_id]
-
-        if filtro_categoria_id:
-            comando += " AND p.Categoria_ID = %s"
-            valores.append(filtro_categoria_id)
-
-        if pesquisa:
-            comando += " AND p.Nome LIKE %s"
-            valores.append(f"%{pesquisa}%")
-
-        comando += " ORDER BY p.ID_Produto"
-
-        cursor.execute(comando, tuple(valores))
+            ORDER BY p.ID_Produto
+        """, (sessao.loja_id,))
         return cursor.fetchall()
-
     except Exception as e:
         print("Erro ao listar produtos:", e)
         return []
@@ -79,26 +59,22 @@ def listar_produtos(filtro_categoria_id=None, pesquisa=None):
 
 
 # ==========================
-# ATUALIZAR PRODUTO DA LOJA
+# ATUALIZAR PRODUTO
 # ==========================
 def atualizar_produto(codigo, nome, preco, img, categoria_nome):
-    con = conectar()
-    if con is None:
+    if sessao.loja_id is None:
         return False
 
+    con = conectar()
     categoria_id = buscar_id_por_nome(categoria_nome)
-    loja_id = sessao.loja_id
-
     cursor = con.cursor()
+
     try:
-        cursor.execute(
-            """
+        cursor.execute("""
             UPDATE Produtos
             SET Nome=%s, Preco=%s, Categoria_ID=%s, Img=%s
             WHERE ID_Produto=%s AND ID_Loja=%s
-            """,
-            (nome, preco, categoria_id, img, codigo, loja_id)
-        )
+        """, (nome, preco, categoria_id, img, codigo, sessao.loja_id))
         con.commit()
         return cursor.rowcount > 0
     except Exception as e:
@@ -109,20 +85,19 @@ def atualizar_produto(codigo, nome, preco, img, categoria_nome):
 
 
 # ==========================
-# EXCLUIR PRODUTO DA LOJA
+# EXCLUIR PRODUTO
 # ==========================
 def excluir_produto(id_produto):
-    con = conectar()
-    if con is None:
+    if sessao.loja_id is None:
         return False
 
-    loja_id = sessao.loja_id
+    con = conectar()
     cursor = con.cursor()
 
     try:
         cursor.execute(
             "DELETE FROM Produtos WHERE ID_Produto=%s AND ID_Loja=%s",
-            (id_produto, loja_id)
+            (id_produto, sessao.loja_id)
         )
         con.commit()
         return cursor.rowcount > 0
