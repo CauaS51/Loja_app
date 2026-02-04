@@ -14,7 +14,7 @@ def conectar():
         conexao = mysql.connector.connect(
             host="localhost",
             user="root",      # altere conforme seu MySQL
-            password="Boibom@86321",      # troque pela sua senha real
+            password="",      # troque pela sua senha real
             database="loja_db"
         )
         return conexao
