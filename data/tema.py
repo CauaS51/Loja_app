@@ -1,11 +1,7 @@
-# ==========================
-# THEME EDITOR
-# ==========================
 import customtkinter as ctk
 from tkinter import colorchooser, filedialog, messagebox
 from PIL import Image, ImageOps
 import os
-import json
 
 class ThemeEditor(ctk.CTkToplevel):
     def __init__(self, app, tema_atual=None, nome_loja="", callback_confirmar=None):
@@ -37,32 +33,17 @@ class ThemeEditor(ctk.CTkToplevel):
         }
 
         self.modo_preview = "Light"
-        if tema_atual:
-            self.tema_light = tema_atual.get("Light", self.tema_light_default.copy())
-            self.tema_dark = tema_atual.get("Dark", self.tema_dark_default.copy())
-        else:
-            self.tema_light = self.tema_light_default.copy()
-            self.tema_dark = self.tema_dark_default.copy()
+        self.tema_light = self.tema_light_default.copy()
+        self.tema_dark = self.tema_dark_default.copy()
+        self.tema = self.tema_light 
 
-        self.tema = self.tema_light.copy()
-
-        # Referências das imagens
         self.logo_img_light = None
         self.logo_img_dark = None
-        if self.tema_light.get("LOGO_IMG"):
-            self.logo_img_light = self.carregar_imagem_preview(self.tema_light["LOGO_IMG"])
-        if self.tema_dark.get("LOGO_IMG"):
-            self.logo_img_dark = self.carregar_imagem_preview(self.tema_dark["LOGO_IMG"])
-
-        self.cards_preview = []
-        self.labels_preview = [] 
         self.color_buttons = {}
 
         self.center_window()
         self.criar_interface()
-        self.atualizar_preview()
 
-    # ================== MÉTODOS DE INTERFACE ==================
     def center_window(self):
         self.update_idletasks()
         w, h = 950, 650
@@ -79,7 +60,13 @@ class ThemeEditor(ctk.CTkToplevel):
         left_panel = ctk.CTkFrame(self, corner_radius=0, fg_color=None)
         left_panel.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
         
-        ctk.CTkLabel(left_panel, text="Customização", font=("Segoe UI", 20, "bold")).pack(pady=(0, 20), anchor="w")
+        ctk.CTkLabel(left_panel, text="Customização", font=("Segoe UI", 22, "bold")).pack(pady=(0, 5), anchor="w")
+
+        # Seletor de Tema (Toggle)
+        self.switch_tema = ctk.CTkSegmentedButton(left_panel, values=["Light", "Dark"],
+                                                command=self.alternar_preview_segmented)
+        self.switch_tema.set("Light")
+        self.switch_tema.pack(pady=(0, 20), fill="x")
 
         scroll_colors = ctk.CTkScrollableFrame(left_panel, fg_color="transparent")
         scroll_colors.pack(expand=True, fill="both")
@@ -88,20 +75,18 @@ class ThemeEditor(ctk.CTkToplevel):
         self.criar_secao_cor(scroll_colors, "Cores dos Cards", ["CARD_CAIXA", "CARD_ESTOQUE", "CARD_RELATORIOS", "CARD_CADASTROS"])
         self.criar_secao_cor(scroll_colors, "Interface e Texto", ["TEXT_PRIMARY", "TEXT_SECONDARY", "CARD_BG", "ENTRY_BG"])
 
-        # ================= AÇÕES =================
+        # Ações
         actions_frame = ctk.CTkFrame(left_panel, fg_color="transparent")
         actions_frame.pack(fill="x", pady=(10, 0))
 
         ctk.CTkButton(actions_frame, text="Resetar", fg_color="#E74C3C", hover_color="#C0392B", 
-                      width=100, command=self.resetar_tema).pack(side="left", padx=5)
-        ctk.CTkButton(actions_frame, text="Salvar e Finalizar", fg_color="#27AE60", hover_color="#1E8449",
-                      command=self.confirmar).pack(side="right", fill="x", expand=True, padx=5)
+                      width=80, command=self.resetar_tema).pack(side="left", padx=5)
+        
+        # Botão Salvar - Já configurado para fechar a janela no comando confirmar
+        ctk.CTkButton(actions_frame, text="Salvar Alterações", fg_color="#27AE60", hover_color="#1E8449",
+                      font=("Segoe UI", 13, "bold"), command=self.confirmar).pack(side="right", fill="x", expand=True, padx=5)
 
-        # ================= BOTÃO ALTERAR LIGHT/DARK =================
-        ctk.CTkButton(left_panel, text="Alternar Light/Dark", fg_color="#2980B9", hover_color="#1F618D",
-                      command=self.alternar_preview).pack(fill="x", pady=10)
-
-        # ================= COLUNA DIREITA =================
+        # ================= COLUNA DIREITA (PREVIEW) =================
         self.right_panel = ctk.CTkFrame(self, corner_radius=20)
         self.right_panel.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 
@@ -112,7 +97,7 @@ class ThemeEditor(ctk.CTkToplevel):
         self.logo_container.pack(side="left")
         self.logo_container.pack_propagate(False)
         
-        self.lbl_logo_preview = ctk.CTkLabel(self.logo_container, text=self.tema["LOGO"], font=("Segoe UI", 40))
+        self.lbl_logo_preview = ctk.CTkLabel(self.logo_container, text="🏬", font=("Segoe UI", 40))
         self.lbl_logo_preview.pack(expand=True)
         
         info_frame = ctk.CTkFrame(self.preview_header, fg_color="transparent")
@@ -120,10 +105,10 @@ class ThemeEditor(ctk.CTkToplevel):
         
         self.nome_entry = ctk.CTkEntry(info_frame, placeholder_text="Nome da Loja", width=250, font=("Segoe UI", 16, "bold"))
         self.nome_entry.insert(0, self.nome_loja)
-        self.nome_entry.pack(pady=5)
+        self.nome_entry.pack(pady=2)
 
         self.desc_entry = ctk.CTkEntry(info_frame, placeholder_text="Slogan ou Descrição", width=250)
-        self.desc_entry.pack(pady=5)
+        self.desc_entry.pack(pady=2)
         
         ctk.CTkButton(self.preview_header, text="Alterar Logo", width=100, command=self.escolher_logo).pack(side="right", padx=10)
 
@@ -133,9 +118,7 @@ class ThemeEditor(ctk.CTkToplevel):
 
         nomes_cards = ["Vendas", "Estoque", "Financeiro", "Config"]
         icones = ["💰", "📦", "📊", "⚙️"]
-        
-        self.cards_preview = []
-        self.labels_preview = []
+        self.preview_cards_list = []
 
         for i, (nome, icone) in enumerate(zip(nomes_cards, icones)):
             card = ctk.CTkFrame(self.cards_container, corner_radius=12, height=100)
@@ -147,10 +130,13 @@ class ThemeEditor(ctk.CTkToplevel):
             lbl_t = ctk.CTkLabel(card, text=nome, font=("Segoe UI", 13, "bold"))
             lbl_t.pack()
             
-            self.cards_preview.append(card)
-            self.labels_preview.append((lbl_i, lbl_t))
+            # Guardamos o card e seus elementos para atualizar cores depois
+            self.preview_cards_list.append({
+                "frame": card,
+                "labels": [lbl_i, lbl_t],
+                "tipo": f"CARD_{['CAIXA', 'ESTOQUE', 'RELATORIOS', 'CADASTROS'][i]}"
+            })
 
-    # ================== SEÇÃO DE CORES =================
     def criar_secao_cor(self, master, titulo, chaves):
         ctk.CTkLabel(master, text=titulo, font=("Segoe UI", 12, "bold"), text_color="gray").pack(pady=(10, 5), anchor="w")
         for chave in chaves:
@@ -164,126 +150,112 @@ class ThemeEditor(ctk.CTkToplevel):
             btn_color.pack(side="right", padx=5)
             self.color_buttons[chave] = btn_color
 
-    def escolher_cor(self, chave):
-        cor = colorchooser.askcolor(title=f"Escolher {chave}", initialcolor=self.tema[chave])[1]
-        if cor:
-            self.tema[chave] = cor
-            if chave in self.color_buttons:
-                self.color_buttons[chave].configure(fg_color=cor)
-            self.atualizar_preview()
+    def carregar_tema_existente(self, tema):
+        if not tema: return
+        if "NOME_LOJA" in tema:
+            self.nome_entry.delete(0, "end"); self.nome_entry.insert(0, tema["NOME_LOJA"])
+        if "DESCRICAO" in tema:
+            self.desc_entry.delete(0, "end"); self.desc_entry.insert(0, tema["DESCRICAO"])
 
-    def escolher_logo(self):
-        caminho = filedialog.askopenfilename(filetypes=[("Imagens","*.png *.jpg *.jpeg")])
-        if caminho:
-            img_ctk = self.carregar_imagem_preview(caminho)
-            if self.modo_preview == "Light":
-                self.tema_light["LOGO_IMG"] = caminho
-                self.logo_img_light = img_ctk
-                self.tema["LOGO_IMG"] = caminho
-                self.lbl_logo_preview.configure(image=self.logo_img_light, text="")
-            else:
-                self.tema_dark["LOGO_IMG"] = caminho
-                self.logo_img_dark = img_ctk
-                self.tema["LOGO_IMG"] = caminho
-                self.lbl_logo_preview.configure(image=self.logo_img_dark, text="")
+        if "Light" in tema: self.tema_light = tema["Light"].copy()
+        if "Dark" in tema: self.tema_dark = tema["Dark"].copy()
 
-    def carregar_imagem_preview(self, caminho):
-        img_pil = Image.open(caminho)
-        img_fit = ImageOps.fit(img_pil, (100, 100), Image.Resampling.LANCZOS)
-        return ctk.CTkImage(light_image=img_fit, dark_image=img_fit, size=(100,100))
+        self.tema = self.tema_light
+        self.switch_tema.set("Light")
+        
+        caminho_logo = tema.get("LOGO_IMG")
+        if caminho_logo and os.path.exists(caminho_logo):
+            self.logo_img_light = self.carregar_imagem_preview(caminho_logo)
+            self.logo_img_dark = self.logo_img_light
+        
+        self.sincronizar_cores_botoes()
+        self.atualizar_preview()
+
+    def alternar_preview_segmented(self, modo):
+        if self.modo_preview == "Light": self.tema_light = self.tema.copy()
+        else: self.tema_dark = self.tema.copy()
+
+        self.modo_preview = modo
+        self.tema = self.tema_light if modo == "Light" else self.tema_dark
+        self.sincronizar_cores_botoes()
+        self.atualizar_preview()
+
+    def sincronizar_cores_botoes(self):
+        for chave, btn in self.color_buttons.items():
+            if chave in self.tema: btn.configure(fg_color=self.tema[chave])
 
     def atualizar_preview(self):
         self.right_panel.configure(fg_color=self.tema["BACKGROUND"])
         self.nome_entry.configure(fg_color=self.tema["ENTRY_BG"], text_color=self.tema["TEXT_PRIMARY"])
         self.desc_entry.configure(fg_color=self.tema["ENTRY_BG"], text_color=self.tema["TEXT_PRIMARY"])
         
-        cores_cards = [self.tema["CARD_CAIXA"], self.tema["CARD_ESTOQUE"], self.tema["CARD_RELATORIOS"], self.tema["CARD_CADASTROS"]]
-        for card, cor, labels in zip(self.cards_preview, cores_cards, self.labels_preview):
-            card.configure(fg_color=cor)
-            labels[0].configure(text_color="white")
-            labels[1].configure(text_color="white")
-            card.bind("<Enter>", lambda e, c=card: c.configure(fg_color=self.tema["HOVER"]))
-            card.bind("<Leave>", lambda e, c=card, o=cor: c.configure(fg_color=o))
+        # Atualiza os cards com as novas cores e redefine o efeito de Hover
+        for item in self.preview_cards_list:
+            cor_base = self.tema[item["tipo"]]
+            cor_hover = self.tema["HOVER"]
+            
+            item["frame"].configure(fg_color=cor_base)
+            for lbl in item["labels"]:
+                lbl.configure(text_color="white", bg_color=cor_base)
 
-        # Atualiza logo
-        if self.modo_preview == "Light" and self.logo_img_light:
-            self.lbl_logo_preview.configure(image=self.logo_img_light, text="")
-        elif self.modo_preview == "Dark" and self.logo_img_dark:
-            self.lbl_logo_preview.configure(image=self.logo_img_dark, text="")
-        else:
-            self.lbl_logo_preview.configure(image=None, text=self.tema["LOGO"])
+            # Bind dinâmico para o efeito Hover
+            item["frame"].bind("<Enter>", lambda e, f=item["frame"], c=cor_hover: f.configure(fg_color=c))
+            item["frame"].bind("<Leave>", lambda e, f=item["frame"], c=cor_base: f.configure(fg_color=c))
+            for lbl in item["labels"]:
+                lbl.bind("<Enter>", lambda e, f=item["frame"], c=cor_hover: f.configure(fg_color=c))
+                lbl.bind("<Leave>", lambda e, f=item["frame"], c=cor_base: f.configure(fg_color=c))
 
-    def resetar_tema(self):
-        if messagebox.askyesno("Confirmar", "Deseja resetar para as cores padrão?"):
-            if self.modo_preview == "Light":
-                self.tema = self.tema_light_default.copy()
-            else:
-                self.tema = self.tema_dark_default.copy()
-            for chave, btn in self.color_buttons.items():
-                btn.configure(fg_color=self.tema[chave])
-            self.lbl_logo_preview.configure(image=None, text=self.tema["LOGO"])
+        img_atual = self.logo_img_light if self.modo_preview == "Light" else self.logo_img_dark
+        self.lbl_logo_preview.configure(image=img_atual, text="" if img_atual else self.tema.get("LOGO", "🏬"))
+
+    def escolher_cor(self, chave):
+        cor = colorchooser.askcolor(title=f"Escolher {chave}", initialcolor=self.tema[chave])[1]
+        if cor:
+            self.tema[chave] = cor
+            self.color_buttons[chave].configure(fg_color=cor)
             self.atualizar_preview()
 
-    def carregar_tema_existente(self, tema): 
+    def escolher_logo(self):
+        caminho = filedialog.askopenfilename(filetypes=[("Imagens","*.png *.jpg *.jpeg")])
+        if caminho:
+            img_ctk = self.carregar_imagem_preview(caminho)
+            self.tema["LOGO_IMG"] = caminho
+            if self.modo_preview == "Light": self.logo_img_light = img_ctk
+            else: self.logo_img_dark = img_ctk
+            self.atualizar_preview()
+
+    def carregar_imagem_preview(self, caminho):
         try:
-            self.var_nome_loja.set(tema.get("NOME_LOJA", ""))
+            img_pil = Image.open(caminho)
+            img_fit = ImageOps.fit(img_pil, (100, 100), Image.Resampling.LANCZOS)
+            return ctk.CTkImage(light_image=img_fit, dark_image=img_fit, size=(100,100))
+        except: return None
 
-            # cores
-            if "COR_PRIMARIA" in tema:
-                self.cor_primaria = tema["COR_PRIMARIA"]
-                self.btn_cor_primaria.configure(fg_color=self.cor_primaria)
+    def resetar_tema(self):
+        if messagebox.askyesno("Confirmar", "Resetar este modo para o padrão?"):
+            self.tema = self.tema_light_default.copy() if self.modo_preview == "Light" else self.tema_dark_default.copy()
+            self.sincronizar_cores_botoes(); self.atualizar_preview()
 
-            if "COR_SECUNDARIA" in tema:
-                self.cor_secundaria = tema["COR_SECUNDARIA"]
-                self.btn_cor_secundaria.configure(fg_color=self.cor_secundaria)
-
-            # logo
-            if tema.get("LOGO_IMG"):
-                self.logo_path = tema["LOGO_IMG"]
-                self.lbl_logo.configure(text="Logo carregada ✔")
-
-        except Exception as e:
-            print("Erro ao carregar tema existente:", e)
-
-
-    # ================== ALTERNAR LIGHT/DARK =================
-    def alternar_preview(self):
-        if self.modo_preview == "Light":
-            self.tema_light = self.tema.copy()
-            self.modo_preview = "Dark"
-            self.tema = self.tema_dark.copy()
-        else:
-            self.tema_dark = self.tema.copy()
-            self.modo_preview = "Light"
-            self.tema = self.tema_light.copy()
-
-        for chave, btn in self.color_buttons.items():
-            btn.configure(fg_color=self.tema[chave])
-        self.atualizar_preview()
-
-    # ================== CONFIRMAR =================
     def confirmar(self):
         nome = self.nome_entry.get().strip()
         if not nome:
             messagebox.showwarning("Atenção", "Dê um nome para sua loja!")
             return
         
-        self.tema["NOME_LOJA"] = nome
-        self.tema["DESCRICAO"] = self.desc_entry.get()
-        self.tema["Light"] = self.tema_light
-        self.tema["Dark"] = self.tema_dark
+        # Salva o estado atual
+        if self.modo_preview == "Light": self.tema_light = self.tema.copy()
+        else: self.tema_dark = self.tema.copy()
+
+        dados_finais = {
+            "NOME_LOJA": nome,
+            "DESCRICAO": self.desc_entry.get(),
+            "LOGO_IMG": self.tema.get("LOGO_IMG"),
+            "Light": self.tema_light,
+            "Dark": self.tema_dark
+        }
         
         if self.callback_confirmar:
-            self.callback_confirmar(self.tema)
+            self.callback_confirmar(dados_finais)
         
+        # Fecha a janela automaticamente
         self.destroy()
-
-    def salvar_auto_json(self):
-        if not os.path.exists("themes"):
-            os.makedirs("themes")
-        nome_arquivo = f"themes/{self.tema['NOME_LOJA'].lower().replace(' ', '_')}.json"
-        try:
-            with open(nome_arquivo, "w", encoding="utf-8") as f:
-                json.dump(self.tema, f, indent=4, ensure_ascii=False)
-        except Exception as e:
-            print(f"Erro ao salvar JSON: {e}")

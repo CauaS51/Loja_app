@@ -11,7 +11,7 @@ USE loja_db;
 CREATE TABLE Lojas (
     ID_Loja INT AUTO_INCREMENT PRIMARY KEY,
     Nome_Loja VARCHAR(150) NOT NULL,
-    Img VARCHAR(255)
+    Logo_Binario LONGBLOB
 );
 
 -- =========================================
@@ -92,7 +92,7 @@ CREATE TABLE Produtos (
     Estoque_Minimo INT DEFAULT 0,
     Unidade VARCHAR(10) DEFAULT 'UN',
     Categoria_ID INT DEFAULT NULL,
-    Img VARCHAR(255),
+    Foto_Binaria LONGBLOB,
     Ativo BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE,
     FOREIGN KEY (Categoria_ID) REFERENCES Categorias(ID_Categoria) ON DELETE SET NULL

@@ -7,9 +7,7 @@ from crud.crud_cadastros import cadastrar_usuario
 from crud.crud_cadastros import (listar_funcionarios_da_loja, remover_funcionario, atualizar_perfil_funcionario)
 
 
-# ====================================================================================
-# ======================== TELA CADASTRO CONTA =======================================
-# ====================================================================================
+# === CADASTRO DE CONTA ===
 class TelaCadastroConta:
     def __init__(self, app):
         self.app = app
@@ -36,6 +34,7 @@ class TelaCadastroConta:
         self.app.configure(fg_color=self.cores["BACKGROUND"])
         self.montar_tela()
 
+# === CRIAÇÃO DE TELA ====
     def montar_tela(self):
         for w in self.app.winfo_children():
             w.destroy()
@@ -121,6 +120,17 @@ class TelaCadastroConta:
         entry.pack(fill="x", pady=2)
         return entry
 
+
+
+
+
+
+
+
+
+#====================================
+# === FUNÇÃO DE INSERÇÃO DE DADOS ===
+#====================================
     def mascara_cpf(self, *args):
         valor = re.sub(r'\D', '', self.var_cpf.get())[:11]
         if len(valor) > 9:
@@ -160,6 +170,7 @@ class TelaCadastroConta:
             messagebox.showerror("CPF Inválido", "CPF deve conter 11 dígitos.")
             return
 
+#========================================================================================
         if cadastrar_usuario(dados["nome"], dados["login"], dados["senha"],
                              dados["email"], dados["tel"], dados["cpf"]):
             messagebox.showinfo("Sucesso", f"Operador {dados['login']} cadastrado!")
@@ -169,26 +180,35 @@ class TelaCadastroConta:
         from custompdv import mostrar_login
         mostrar_login(self.app)
 
-
 def abrir_cadastro(app):
     TelaCadastroConta(app)
+
+
+
+
+
+
+
+
+
+
+# ==== LISTAGEM DE FUNCIONÁRIOS ====
 class TelaListarFuncionarios:
     def __init__(self, app):
         self.app = app
         self.app.after(10, self._iniciar_tela)
 
-    # ================= INICIALIZAÇÃO SEGURA DO TEMA =================
+    # INICIALIZAÇÃO DO TEMA
     def _iniciar_tela(self):
         self.app.update_idletasks()
         self.app.update()
 
-        # Recarrega cores após o modo aplicar
         self.cores = colors.get_colors()
 
         self.app.configure(fg_color=self.cores["BACKGROUND"])
         self.montar_tela()
 
-    # ================= CONSTRUÇÃO =================
+    # CONSTRUÇÃO da TELA
     def montar_tela(self):
         for w in self.app.winfo_children():
             w.destroy()
@@ -208,13 +228,12 @@ class TelaListarFuncionarios:
                          text_color=self.cores["TEXT_SECONDARY"]
                          ).place(relx=p, rely=0.5, anchor="w")
 
-        # ⚠ NÃO usar transparent aqui
         self.scroll = ctk.CTkScrollableFrame(container, fg_color=self.cores["BACKGROUND"])
         self.scroll.pack(fill="both", expand=True, padx=5, pady=5)
 
         self.carregar_funcionarios()
 
-    # ================= HEADER =================
+    # HEADER
     def criar_header(self):
         header = ctk.CTkFrame(self.app, fg_color=self.cores["PRIMARY"], height=80)
         header.pack(fill="x")
@@ -238,7 +257,7 @@ class TelaListarFuncionarios:
                       text_color=self.cores["TEXT_PRIMARY"],
                       command=self.alternar_tema).pack(side="right", padx=20, pady=20)
 
-    # ================= TROCA DE TEMA REAL =================
+    # TROCA DE TEMA
     def alternar_tema(self):
         colors.alternar_tema()
 
@@ -247,7 +266,7 @@ class TelaListarFuncionarios:
 
         self.app.after(10, self._iniciar_tela)
 
-    # ================= LISTAGEM =================
+    # === LISTAGEM === 
     def carregar_funcionarios(self):
         for w in self.scroll.winfo_children():
             w.destroy()
@@ -293,7 +312,7 @@ class TelaListarFuncionarios:
                 menu.set(perfil_val)
                 menu.place(relx=0.70, rely=0.5, anchor="w")
 
-    # ================= AÇÕES =================
+    #  === AÇÕES ===
     def mudar_cargo(self, func, novo):
         atualizar_perfil_funcionario(func.get('ID_Funcionario'), novo)
 

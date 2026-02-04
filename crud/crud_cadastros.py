@@ -1,6 +1,5 @@
 from data.conexao import conectar
-from data.criptografia import hash_senha
-
+from data.hash import hash_senha
 
 # =========================
 # CADASTRAR CONTA

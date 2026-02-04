@@ -4,15 +4,15 @@ import json
 # ==========================
 # CRIAR LOJA
 # ==========================
-def criar_loja(nome):
+def criar_loja(nome, logo_blob=None):
     con = conectar()
     if con is None:
         return None
     try:
         cursor = con.cursor()
         cursor.execute(
-            "INSERT INTO Lojas (Nome_Loja) VALUES (%s)",
-            (nome,)
+            "INSERT INTO Lojas (Nome_Loja, Logo_Binario) VALUES (%s, %s)",
+            (nome, logo_blob)
         )
         con.commit()
         return cursor.lastrowid
@@ -36,7 +36,7 @@ def listar_lojas():
             SELECT 
                 ID_Loja AS id,
                 Nome_Loja AS nome,
-                Img AS img
+                Logo_Binario AS img
             FROM Lojas
             ORDER BY Nome_Loja
         """)
@@ -52,7 +52,7 @@ def listar_lojas():
 # ATUALIZAR LOJA
 # ==========================
 def atualizar_loja(id_loja, nome=None, img=None):
-    if not nome and not img:
+    if not nome and img is None:
         return False
 
     con = conectar()
@@ -68,8 +68,8 @@ def atualizar_loja(id_loja, nome=None, img=None):
             campos.append("Nome_Loja = %s")
             valores.append(nome)
 
-        if img:
-            campos.append("Img = %s")
+        if img is not None:
+            campos.append("Logo_Binario = %s")
             valores.append(img)
 
         valores.append(id_loja)
@@ -117,7 +117,7 @@ def listar_lojas_usuario(id_conta):
             SELECT 
                 Lojas.ID_Loja AS id,
                 Lojas.Nome_Loja AS nome,
-                Lojas.Img AS img,
+                Lojas.Logo_Binario AS img,
                 Perfis.Nome_Perfil AS perfil,
                 Funcionarios_Loja.ID_Funcionario AS id_funcionario
             FROM Funcionarios_Loja
@@ -145,14 +145,12 @@ def entrar_em_loja(id_loja, id_conta):
     try:
         cursor = con.cursor(dictionary=True)
 
-        # 1️⃣ Verifica se a loja existe
-        cursor.execute("SELECT ID_Loja, Nome_Loja FROM Lojas WHERE ID_Loja = %s", (id_loja,))
+        cursor.execute("SELECT ID_Loja, Nome_Loja, Logo_Binario FROM Lojas WHERE ID_Loja = %s", (id_loja,))
         loja = cursor.fetchone()
 
         if not loja:
-            return None  # Loja não existe
+            return None
 
-        # 2️⃣ Verifica se usuário já pertence à loja
         cursor.execute("""
             SELECT 
                 Funcionarios_Loja.ID_Funcionario AS id_funcionario,
@@ -165,15 +163,14 @@ def entrar_em_loja(id_loja, id_conta):
 
         vinculo = cursor.fetchone()
 
-        # 3️⃣ Se NÃO estiver vinculado, adiciona como CAIXA automaticamente
         if not vinculo:
             cursor.execute("SELECT ID_Perfil FROM Perfis WHERE Nome_Perfil='Caixa'")
-            perfil = cursor.fetchone()
+            perfil_caixa = cursor.fetchone()
 
             cursor.execute("""
                 INSERT INTO Funcionarios_Loja (ID_Conta, ID_Loja, ID_Perfil)
                 VALUES (%s, %s, %s)
-            """, (id_conta, id_loja, perfil["ID_Perfil"]))
+            """, (id_conta, id_loja, perfil_caixa["ID_Perfil"]))
             con.commit()
 
             id_funcionario = cursor.lastrowid
@@ -182,10 +179,10 @@ def entrar_em_loja(id_loja, id_conta):
             id_funcionario = vinculo["id_funcionario"]
             nome_perfil = vinculo["perfil"]
 
-        # 4️⃣ Retorna dados para a sessão
         return {
             "id": loja["ID_Loja"],
             "nome": loja["Nome_Loja"],
+            "img": loja["Logo_Binario"], # Retorna os bytes para a sessão se necessário
             "id_funcionario": id_funcionario,
             "perfil": nome_perfil
         }
@@ -193,10 +190,8 @@ def entrar_em_loja(id_loja, id_conta):
     except Exception as e:
         print("Erro ao entrar na loja:", e)
         return None
-
     finally:
         con.close()
-
 
 
 # ==========================
@@ -215,7 +210,6 @@ def associar_usuario_a_loja(id_conta, id_loja, perfil="Administrador"):
         )
         perfil_row = cursor.fetchone()
         if not perfil_row:
-            print(f"Perfil '{perfil}' não encontrado.")
             return False
 
         id_perfil = perfil_row["ID_Perfil"]
@@ -261,10 +255,6 @@ def salvar_tema_loja(loja_id, tema):
 # BUSCAR DADOS VISUAIS DA LOJA
 # ==========================
 def buscar_dados_visuais(loja_id):
-    """
-    Retorna os dados visuais de uma loja pelo ID,
-    incluindo Tema_JSON, logo, id_funcionario e perfil.
-    """
     con = conectar()
     if con is None:
         return None
@@ -274,7 +264,7 @@ def buscar_dados_visuais(loja_id):
         cursor.execute("""
             SELECT 
                 Lojas.ID_Loja AS id,
-                Lojas.Img AS img,
+                Lojas.Logo_Binario AS img,
                 Funcionarios_Loja.ID_Funcionario AS id_funcionario,
                 Perfis.Nome_Perfil AS perfil,
                 Temas_Lojas.Tema_JSON AS Tema_JSON

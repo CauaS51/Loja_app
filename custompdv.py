@@ -12,7 +12,6 @@ import data.sessao as sessao
 import os
 import shutil
 
-
 # === MODO CLARO PADRÃO ===
 ctk.set_appearance_mode("light")
 
@@ -22,16 +21,18 @@ def mostrar_login(app):
         w.destroy()
     
     ctk.set_default_color_theme("blue")
-
-    # CONFIGURAÇÃO GRID PRINCIPAL
+    
+    screen_w = app.winfo_screenwidth()
+    escala = screen_w / 1600 
+    
     app.title("Custom-PDV") 
-    app.geometry("1200x700")
-    app.minsize(900, 500)
+    app.geometry(f"{int(screen_w*0.7)}x{int(app.winfo_screenheight()*0.7)}")
+    app.minsize(800, 600)
     app.grid_rowconfigure(0, weight=1)
-    app.grid_columnconfigure(0, weight=1)  # lado esquerdo maior
-    app.grid_columnconfigure(1, weight=1)  # lado direito menor
+    
+    app.grid_columnconfigure(0, weight=1, uniform="group1")  
+    app.grid_columnconfigure(1, weight=1, uniform="group1")  
 
-    # CORES
     cores = get_colors()
 
     # === FRAME ESQUERDA ===
@@ -42,39 +43,80 @@ def mostrar_login(app):
     frame_left.grid_rowconfigure(2, weight=1)
     frame_left.grid_columnconfigure(0, weight=1)
 
-    # CONTAINER LOGIN
     login_container = ctk.CTkFrame(frame_left, fg_color="transparent")
-    login_container.grid(row=1, column=0, sticky="nsew")
+    login_container.place(relx=0.5, rely=0.5, anchor="center")
 
-    # TÍTULOS
-    ctk.CTkLabel(login_container, text="🏬 CUSTOM PDV", font=("Comfortaa", 40, "bold"),
-                 text_color=cores["TEXT_PRIMARY"]).pack(pady=(50,50))
-    ctk.CTkLabel(login_container, text="BEM VINDO!", font=("Comfortaa", 40, "bold"),
-                 text_color=cores["TEXT_PRIMARY"]).pack(pady=(0,10), padx=(0,60))
+    # TÍTULOS COM FONTE ESCALÁVEL
+    ctk.CTkLabel(login_container, text="🏬 CUSTOM PDV", font=("Comfortaa", int(40 * escala), "bold"),
+                 text_color=cores["TEXT_PRIMARY"]).pack(pady=(int(30*escala), int(30*escala)))
+    
+    ctk.CTkLabel(login_container, text="BEM VINDO!", font=("Comfortaa", int(40 * escala), "bold"),
+                 text_color=cores["TEXT_PRIMARY"]).pack(pady=(0,10), padx=(0, int(60*escala)))
+    
     ctk.CTkLabel(login_container, text="Gerencie sua loja de forma prática e rápida",
-                 font=("Arial", 16,"bold"), text_color=cores["TEXT_PRIMARY"]).pack(pady=(0,10), padx=(30,0))
+                 font=("Arial", int(16 * escala), "bold"), text_color=cores["TEXT_PRIMARY"]).pack(pady=(0,20), padx=(30,0))
 
-    # CAMPOS
-    entry_user = ctk.CTkEntry(login_container, placeholder_text="👤 Usuário", font=("Arial", 14,"bold"),
-                              placeholder_text_color=cores["TEXT_PRIMARY"], width=300, height=45, corner_radius=10)
+    # CAMPOS ESCALÁVEIS
+    entry_w = int(300 * escala)
+    entry_h = int(45 * escala)
+    
+    entry_user = ctk.CTkEntry(login_container, placeholder_text="👤 Usuário", font=("Arial", int(14*escala), "bold"),
+                              placeholder_text_color=cores["TEXT_PRIMARY"], width=entry_w, height=entry_h, corner_radius=10)
     entry_user.pack(pady=8)
-    entry_pass = ctk.CTkEntry(login_container, placeholder_text="🔒 Senha", font=("Arial", 14,"bold"),
-                              placeholder_text_color=cores["TEXT_PRIMARY"], show="*", width=300, height=45, corner_radius=10)
-    entry_pass.pack(pady=8)
+    
+    # CONTAINER DA SENHA PARA O OLHINHO
+    pass_container = ctk.CTkFrame(login_container, fg_color="transparent")
+    pass_container.pack(pady=8)
 
-    # BOTÃO ESQUECI MINHA SENHA
+    entry_pass = ctk.CTkEntry(pass_container, placeholder_text="🔒 Senha", font=("Arial", int(14*escala), "bold"),
+                              placeholder_text_color=cores["TEXT_PRIMARY"], show="*", width=entry_w, height=entry_h, corner_radius=10)
+    entry_pass.pack()
+
+    # FUNÇÃO PARA ALTERNAR VISIBILIDADE
+    img_eye = ctk.CTkImage(
+    light_image=Image.open("assets/icons/eye_off.png"),
+    dark_image=Image.open("assets/icons/eye_off_dark.png"),
+    size=(20, 20)
+    )
+
+    img_eye_off = ctk.CTkImage(
+        light_image=Image.open("assets/icons/eye.png"),
+        dark_image=Image.open("assets/icons/eye_dark.png"),
+        size=(20, 20)
+    )
+
+    def alternar_senha():
+        if entry_pass.cget("show") == "*":
+            entry_pass.configure(show="")
+            btn_olho.configure(image=img_eye)
+        else:
+            entry_pass.configure(show="*")
+            btn_olho.configure(image=img_eye_off)
+
+    btn_olho = ctk.CTkButton(
+    pass_container,
+    image=img_eye_off,
+    text="",
+    width=30,
+    height=30,
+    fg_color="transparent",
+    hover_color=cores["HOVER"],
+    command=alternar_senha
+)
+    
+    btn_olho.place(relx=1.0, rely=0.5, x=-10, anchor="e")
+
     def esqueci_senha():
         print("A opção 'Esqueci minha senha' foi clicada!")
+    
     ctk.CTkButton(login_container, text="Esqueceu sua senha?", fg_color="transparent",
-                  hover_color=cores["HOVER"], font=("Segoe UI", 13,"bold"),
-                  text_color=cores["TEXT_PRIMARY"], command=esqueci_senha).pack(pady=(5,15), padx=(0,175))
+                  hover_color=cores["HOVER"], font=("Segoe UI", int(13*escala), "bold"),
+                  text_color=cores["TEXT_PRIMARY"], command=esqueci_senha).pack(pady=(5,15), padx=(0, int(175*escala)))
 
-    # ==================
     # FUNÇÃO LOGIN
-    # ==================
     from data.conexao import conectar
-    from data.criptografia import verificar_senha
-    def on_login():
+    from data.hash import verificar_senha
+    def on_login(event=None):
         login_input = entry_user.get().strip().lower()
         pwd_input  = entry_pass.get().strip()
 
@@ -85,50 +127,35 @@ def mostrar_login(app):
         try:
             conn = conectar()
             cursor = conn.cursor(dictionary=True)
-
-            # 🔍 BUSCA APENAS PELO LOGIN
-            query = """
-                SELECT ID_Conta, Nome, Login, Senha
-                FROM Contas
-                WHERE Login = %s
-            """
+            query = "SELECT ID_Conta, Nome, Login, Senha FROM Contas WHERE Login = %s"
             cursor.execute(query, (login_input,))
             user = cursor.fetchone()
-
             cursor.close()
             conn.close()
 
-            # 🔐 VERIFICA HASH
-            
             if user and verificar_senha(pwd_input, user["Senha"]):
                 sessao.usuario_id = user["ID_Conta"]
                 sessao.nome = user["Nome"]
                 sessao.usuario = user["Login"]
-
                 messagebox.showinfo("Sucesso", f"Bem-vindo, {sessao.nome}!")
-
-                for w in app.winfo_children():
-                    w.destroy()
-
+                for w in app.winfo_children(): w.destroy()
                 loja.mostrar_lojas(app)
-
             else:
                 messagebox.showerror("Erro", "Usuário ou senha incorretos.")
-
         except Exception as e:
-            print("Erro login:", e)
             messagebox.showerror("Erro", "Não foi possível conectar ao servidor.")
 
-    # BOTÃO LOGIN        
-    ctk.CTkButton(login_container, text="Entrar", font=("Arial", 15, "bold"),
-                  width=300, height=45, corner_radius=10,
+    # BOTÕES ESCALÁVEIS
+    ctk.CTkButton(login_container, text="Entrar", font=("Arial", int(15*escala), "bold"),
+                  width=entry_w, height=entry_h, corner_radius=10,
                   fg_color=cores["PRIMARY"], hover_color=cores["HOVER"], command=on_login).pack(pady=8)
+    app.bind('<Return>', on_login)
 
-    # BOTÃO CADASTRO
     def abrir_cadastro():
         cadastro.abrir_cadastro(app)
-    ctk.CTkButton(login_container, text="Cadastre-se", font=("Arial", 15, "bold"),
-                  width=300, height=45, corner_radius=10,
+    
+    ctk.CTkButton(login_container, text="Cadastre-se", font=("Arial", int(15*escala), "bold"),
+                  width=entry_w, height=entry_h, corner_radius=10,
                   fg_color="transparent", hover_color=cores["HOVER"],
                   border_width=2, border_color=cores["PRIMARY"], text_color=cores["PRIMARY"],
                   command=abrir_cadastro).pack(pady=8)
@@ -136,149 +163,64 @@ def mostrar_login(app):
     # === FRAME DIREITA ===
     frame_right = ctk.CTkFrame(app, corner_radius=0, fg_color=cores["PRIMARY"])
     frame_right.grid(row=0, column=1, sticky="nsew")
-    frame_right.grid_rowconfigure(0, weight=1)  # espaço acima do logo
-    frame_right.grid_rowconfigure(1, weight=1)  # logo
-    frame_right.grid_rowconfigure(2, weight=1)  # espaço abaixo do logo
     frame_right.grid_columnconfigure(0, weight=1)
 
-    # BOTÃO ALTERNAR TEMA
     def alternar_tema():
         app.focus_force()
         colors.alternar_tema()
         mostrar_login(app)
 
     icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "🔆"
-    theme_button = ctk.CTkButton(
-        frame_right, 
-        text=icone_tema, 
-        width=30, 
-        height=40,
-        corner_radius=12, 
-        fg_color=cores["ENTRY_BG"],
-        hover_color=cores["HOVER"], 
-        text_color=cores["TEXT_PRIMARY"],
-        font=ctk.CTkFont(size=25), 
-        command=alternar_tema
-        )
-    theme_button.grid(row=0, column=0, padx=20, pady=20, sticky="ne") 
+    theme_button = ctk.CTkButton(frame_right, text=icone_tema, width=30, height=40, corner_radius=12, 
+                                 fg_color=cores["ENTRY_BG"], hover_color=cores["HOVER"], 
+                                 text_color=cores["TEXT_PRIMARY"], font=ctk.CTkFont(size=int(25*escala)), command=alternar_tema)
+    theme_button.place(relx=0.95, rely=0.05, anchor="ne")
 
-    # LOGO
-    if ctk.get_appearance_mode() == "Dark":
-        logo_image = ctk.CTkImage(light_image=Image.open("images/logo_loja_dark.png"),
-                                dark_image=Image.open("images/logo_loja_dark.png"),
-                                size=(400, 380))
-    else:
-        logo_image = ctk.CTkImage(light_image=Image.open("images/logo_loja.png"),
-                                dark_image=Image.open("images/logo_loja.png"),
-                                size=(400, 380))
+    # LOGO ESCALÁVEL
+    logo_size = int(400 * escala)
+    img_path = "assets/logo_loja_dark.png" if ctk.get_appearance_mode() == "Dark" else "assets/logo_loja.png"
+    logo_image = ctk.CTkImage(light_image=Image.open(img_path), dark_image=Image.open(img_path), size=(logo_size, int(logo_size * 0.95)))
     
-    ctk.CTkLabel(frame_right, image=logo_image, text="").grid(row=1, column=0)
+    logo_label = ctk.CTkLabel(frame_right, image=logo_image, text="")
+    logo_label.place(relx=0.5, rely=0.5, anchor="center")
 
-    # === RODAPÉ ===
-    frame_footer = ctk.CTkFrame(frame_right, corner_radius=0, fg_color=cores["PRIMARY"], height=80)
-    frame_footer.grid(row=2, column=0, sticky="ew")
-    frame_footer.grid_propagate(False)
+    # RODAPÉ ESCALÁVEL
+    frame_footer = ctk.CTkFrame(frame_right, corner_radius=0, fg_color=cores["PRIMARY"], height=int(100*escala))
+    frame_footer.place(relx=0.5, rely=0.9, anchor="center", relwidth=1)
 
     links_frame = ctk.CTkFrame(frame_footer, fg_color="transparent")
-    links_frame.pack(pady=(20,20))
+    links_frame.pack(pady=(10,10))
 
-    # LINKS DO RODAPÉ
-    def abrir_politica():
+    def abrir_info_auxiliar(app, titulo, texto_h1):
         win = ctk.CTkToplevel(app)
-        win.title("Políticas de Privacidade")
-        ctk.CTkLabel(win, text="Política de Privacidade", font=("Arial", 20, "bold")).pack(pady=20)
-        largura, altura =900, 600
-        win.geometry(f"{largura}x{altura}")
-        win.transient(app)  
+        win.title(titulo)
+        win.geometry(f"900x600")
+        win.transient(app)
         win.grab_set()
-        app_x = app.winfo_x()
-        app_y = app.winfo_y()
-        app_largura = app.winfo_width()
-        app_altura = app.winfo_height()
-        x = app_x + (app_largura // 2) - (largura // 2)
-        y = app_y + (app_altura // 2) - (altura // 2)
-        win.geometry(f"{largura}x{altura}+{x}+{y}")
+        ctk.CTkLabel(win, text=texto_h1, font=("Arial", 20, "bold")).pack(pady=20)
 
-    def abrir_suporte():
-        win = ctk.CTkToplevel(app)
-        win.title("Suporte")
-        ctk.CTkLabel(win, text="Suporte", font=("Arial", 20, "bold")).pack(pady=20)
-        largura, altura =900, 600
-        win.geometry(f"{largura}x{altura}")
-        win.transient(app)  
-        win.grab_set()
-        app_x = app.winfo_x()
-        app_y = app.winfo_y()
-        app_largura = app.winfo_width()
-        app_altura = app.winfo_height()
-        x = app_x + (app_largura // 2) - (largura // 2)
-        y = app_y + (app_altura // 2) - (altura // 2)
-        win.geometry(f"{largura}x{altura}+{x}+{y}")
+    links = [("Políticas", "Políticas de Privacidade"), ("Suporte", "Central de Suporte"), ("Ajuda", "Central de Ajuda")]
 
-    def abrir_ajuda():
-        win = ctk.CTkToplevel(app)
-        win.title("Ajuda")
-        ctk.CTkLabel(win, text="Ajuda", font=("Arial", 20, "bold")).pack(pady=20)
-        largura, altura =900, 600
-        win.geometry(f"{largura}x{altura}")  
-        win.transient(app)  
-        win.grab_set()
-        app_x = app.winfo_x()
-        app_y = app.winfo_y()
-        app_largura = app.winfo_width()
-        app_altura = app.winfo_height()
-        x = app_x + (app_largura // 2) - (largura // 2)
-        y = app_y + (app_altura // 2) - (altura // 2)
-        win.geometry(f"{largura}x{altura}+{x}+{y}")
-
-    links = [("Políticas", abrir_politica),
-             ("Suporte", abrir_suporte),
-             ("Ajuda", abrir_ajuda)]
-
-    for i, (text, cmd) in enumerate(links):
-        btn = ctk.CTkButton(links_frame, text=text, font=("Arial", 13,"bold"),
-                            width=0, height=0, corner_radius=0,
-                            fg_color="transparent", hover_color=cores["HOVER"],
-                            text_color="#FFFFFF", command=cmd)
+    for i, (text, info) in enumerate(links):
+        btn = ctk.CTkButton(links_frame, text=text, font=("Arial", int(13*escala), "bold"), width=0, height=0,
+                            fg_color="transparent", hover_color=cores["HOVER"], text_color="#FFFFFF",
+                            command=lambda t=text, inf=info: abrir_info_auxiliar(app, t, inf))
         btn.pack(side="left", padx=5)
-
-
-        def hover_underline(widget, base_font=("Arial", 13, "bold")):
-            widget.bind("<Enter>", lambda e: widget.configure(font=(base_font[0], base_font[1], "underline", "bold")))
-            widget.bind("<Leave>", lambda e: widget.configure(font=base_font))
-        hover_underline(btn)
-
         if i < len(links) - 1:
-            sep = ctk.CTkLabel(links_frame, text="|", text_color="#FFFFFF", font=("Arial", 12))
-            sep.pack(side="left", padx=1)
+            ctk.CTkLabel(links_frame, text="|", text_color="#FFFFFF", font=("Arial", int(12*escala))).pack(side="left", padx=1)
 
-    # RODAPÉ INFORMAÇÕES DE CONTATO
-    ctk.CTkLabel(frame_footer, text="\n📞 (91)98765-4321   🌐 www.custompdv.com",
-                 text_color="#FFFFFF", font=("Arial", 14, "bold")).pack(expand=True, pady=(0,50))
+    ctk.CTkLabel(frame_footer, text=f"📞 (91)98765-4321   🌐 www.custompdv.com",
+                 text_color="#FFFFFF", font=("Arial", int(14*escala), "bold")).pack(pady=(0,10))
 
 def excluir_tema_cache(app):
-            import data.colors as colors
+    import data.colors as colors
+    colors.resetar_tema()
+    if os.path.exists("cache_temas"): shutil.rmtree("cache_temas")
+    app.destroy()
 
-            # Reseta o tema para padrão
-            colors.resetar_tema()
-
-            # Exclui a pasta 'themes' se existir
-            caminho_themes = "cache_temas"
-            if os.path.exists(caminho_themes) and os.path.isdir(caminho_themes):
-                try:
-                    shutil.rmtree(caminho_themes)
-                    print("Pasta 'cache_temas' removida com sucesso.")
-                except Exception as e:
-                    print(f"Erro ao remover pasta 'cache_temas': {e}")
-
-            # Fecha a janela
-            app.destroy()
-
-# === MAIN ===
 if __name__ == "__main__":
     app = ctk.CTk()
-    app.geometry("1200x700")
-    app.minsize(900, 500)
+    app.after(0, lambda: app.state('zoomed'))
     app.protocol("WM_DELETE_WINDOW", lambda: excluir_tema_cache(app))
     mostrar_login(app)
     app.mainloop()

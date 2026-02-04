@@ -9,10 +9,11 @@ import data.cadastro as cadastro
 import data.sessao as sessao
 from PIL import Image, ImageOps
 import os
+import io  # Adicionado para processar os bytes da imagem
 from crud.crud_lojas import buscar_dados_visuais
 import json
 
-# === PERFIS ===
+# === PERFIS: DEFINIÇÃO DE PERMISSÕES ===
 PROFILES = {
     "Administrador": {"Caixa": True, "Repositório": True, "Relatórios": True, "Cadastros": True},
     "Caixa": {"Caixa": True, "Repositório": False, "Relatórios": False, "Cadastros": False},
@@ -20,7 +21,7 @@ PROFILES = {
     "Gestor de Dados": {"Caixa": False, "Repositório": False, "Relatórios": True, "Cadastros": True}
 }
 
-# ================= CARD =================
+# ==== CARD ====
 class Card(ctk.CTkFrame):
     def __init__(self, master, title, color, icon_text, command=None, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
@@ -74,7 +75,7 @@ class Card(ctk.CTkFrame):
         rgb = [min(int(c + (255 - c) * factor), 255) for c in rgb]
         return "#%02x%02x%02x" % tuple(rgb)
     
-# ================= AUX =================
+# ==== AUX ====
 def aplicar_permissoes(cards, profile_name):
     perms = PROFILES.get(profile_name, {})
     for key, card in cards.items():
@@ -85,22 +86,14 @@ def abrir_cadastros(app): cadastro.listar_funcionarios(app)
 def mostrar_relatorios(app): relatorios.mostrar_relatorios(app)
 def abrir_repositorio(app): repositorio.abrir_repositorio(app)
 
-# ================= MENU (ENTRADA) =================
 def mostrar_menu(app, usuario, perfil, cores_atualizadas=None):
-
-    # 🔥 SINCRONIZA O TEMA ANTES DE CONSTRUIR
     app.update_idletasks()
     app.update()
-
     for w in app.winfo_children():
         w.destroy()
-
-    # Aguarda CTk finalizar troca de tema antes de criar widgets
     app.after(10, lambda: _construir_menu(app, usuario, perfil, cores_atualizadas))
 
-# ================= MENU (CONSTRUÇÃO REAL) =================
 def _construir_menu(app, usuario, perfil, cores_atualizadas=None):
-
     app.title("Menu Inicial")
 
     # ===== TEMA DA LOJA =====
@@ -115,7 +108,7 @@ def _construir_menu(app, usuario, perfil, cores_atualizadas=None):
                     sessao.tema_loja = json.loads(tema_json)
                 except:
                     sessao.tema_loja = None
-            sessao.logo_path = dados_visuais.get("img")
+            sessao.logo_path = dados_visuais.get("img") # Contém os BYTES do banco
             sessao.nome_loja = dados_visuais.get("nome", "SUPERMERCADO")
 
     cores = cores_atualizadas or get_colors()
@@ -138,22 +131,35 @@ def _construir_menu(app, usuario, perfil, cores_atualizadas=None):
     logo_frame = ctk.CTkFrame(header, fg_color=cores["BACKGROUND_2"], corner_radius=5)
     logo_frame.pack(side="left", padx=20)
 
-    logo_path = getattr(sessao, 'logo_path', None)
-    if logo_path and os.path.exists(logo_path):
+    # --- LÓGICA DE CARREGAMENTO DA LOGO (BYTES) ---
+    img_data = getattr(sessao, 'logo_path', None)
+    logo_exibida = False
+
+    if img_data:
         try:
-            img_pil = Image.open(logo_path)
+            # Se forem bytes, usamos io.BytesIO. Se for string (caminho), usamos direto.
+            if isinstance(img_data, bytes):
+                img_pil = Image.open(io.BytesIO(img_data))
+            elif isinstance(img_data, str) and os.path.exists(img_data):
+                img_pil = Image.open(img_data)
+            else:
+                raise ValueError("Formato não suportado")
+
             img_fit = ImageOps.fit(img_pil, (60, 60), Image.Resampling.LANCZOS)
             logo_img = ctk.CTkImage(light_image=img_fit, dark_image=img_fit, size=(60, 60))
             ctk.CTkLabel(logo_frame, image=logo_img, text="").pack(side="left", padx=5)
-        except:
-            ctk.CTkLabel(logo_frame, text="🏬", font=("Segoe UI", 40)).pack(side="left", padx=5)
-    else:
+            logo_exibida = True
+        except Exception as e:
+            print(f"Erro ao carregar imagem: {e}")
+
+    # Fallback se a imagem não carregar
+    if not logo_exibida:
         ctk.CTkLabel(logo_frame, text="🏬", font=("Segoe UI", 40)).pack(side="left", padx=5)
 
     ctk.CTkLabel(logo_frame, text=nome_loja_atual.upper(), font=("Segoe UI", 18, "bold"),
                  text_color=cores["TEXT_PRIMARY"]).pack(side="left", padx=10)
 
-    # ===== USER INFO =====
+    # USER INFO
     user_frame = ctk.CTkFrame(header, fg_color="transparent")
     user_frame.pack(side="right", padx=30)
 
@@ -162,20 +168,21 @@ def _construir_menu(app, usuario, perfil, cores_atualizadas=None):
     ctk.CTkLabel(user_frame, text=perfil, font=("Segoe UI", 14, "bold"),
                  text_color=cores["SECONDARY"]).pack(side="left", padx=(0, 20))
 
-    def logout():
+    def fechar_loja():
         sessao.funcionario_id = None
         sessao.perfil = None
         sessao.loja_id = None
         sessao.nome_loja = None
         sessao.logo_path = None
         sessao.tema_loja = None
+        colors.resetar_tema()
         from data.loja import mostrar_lojas
         mostrar_lojas(app)
 
-    ctk.CTkButton(user_frame, text="Fechar Loja", command=logout, width=60,
+    ctk.CTkButton(user_frame, text="Fechar Loja", command=fechar_loja, width=60,
                   fg_color="#E74C3C", hover_color="#C0392B").pack(side="left")
 
-    # ===== CONTEÚDO =====
+    # CONTEÚDO 
     container = ctk.CTkFrame(app, fg_color=cores["BACKGROUND"], corner_radius=10)
     container.pack(expand=True, fill="both", padx=20, pady=10)
 
@@ -205,6 +212,4 @@ def _construir_menu(app, usuario, perfil, cores_atualizadas=None):
     cards["Cadastros"].grid(row=1, column=1, padx=15, pady=15, sticky="nsew")
 
     aplicar_permissoes(cards, perfil)
-
     app.update_idletasks()
-
