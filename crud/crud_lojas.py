@@ -1,19 +1,18 @@
 from data.conexao import conectar
 import json
 
-
 # ==========================
 # CRIAR LOJA
 # ==========================
-def criar_loja(nome):
+def criar_loja(nome, logo_blob=None):
     con = conectar()
     if con is None:
         return None
     try:
         cursor = con.cursor()
         cursor.execute(
-            "INSERT INTO Lojas (Nome_Loja) VALUES (%s)",
-            (nome,)
+            "INSERT INTO Lojas (Nome_Loja, Logo_Binario) VALUES (%s, %s)",
+            (nome, logo_blob)
         )
         con.commit()
         return cursor.lastrowid
@@ -37,7 +36,7 @@ def listar_lojas():
             SELECT 
                 ID_Loja AS id,
                 Nome_Loja AS nome,
-                Img AS img
+                Logo_Binario AS img
             FROM Lojas
             ORDER BY Nome_Loja
         """)
@@ -53,7 +52,7 @@ def listar_lojas():
 # ATUALIZAR LOJA
 # ==========================
 def atualizar_loja(id_loja, nome=None, img=None):
-    if not nome and not img:
+    if not nome and img is None:
         return False
 
     con = conectar()
@@ -69,12 +68,11 @@ def atualizar_loja(id_loja, nome=None, img=None):
             campos.append("Nome_Loja = %s")
             valores.append(nome)
 
-        if img:
-            campos.append("Img = %s")
+        if img is not None:
+            campos.append("Logo_Binario = %s")
             valores.append(img)
 
         valores.append(id_loja)
-
         sql = f"UPDATE Lojas SET {', '.join(campos)} WHERE ID_Loja = %s"
         cursor.execute(sql, tuple(valores))
         con.commit()
@@ -104,6 +102,7 @@ def excluir_loja(id_loja):
     finally:
         con.close()
 
+
 # ==========================
 # LISTAR LOJAS DO FUNCIONÁRIO
 # ==========================
@@ -118,7 +117,7 @@ def listar_lojas_usuario(id_conta):
             SELECT 
                 Lojas.ID_Loja AS id,
                 Lojas.Nome_Loja AS nome,
-                Lojas.Img AS img,
+                Lojas.Logo_Binario AS img,
                 Perfis.Nome_Perfil AS perfil,
                 Funcionarios_Loja.ID_Funcionario AS id_funcionario
             FROM Funcionarios_Loja
@@ -127,17 +126,12 @@ def listar_lojas_usuario(id_conta):
             WHERE Funcionarios_Loja.ID_Conta = %s
             ORDER BY Lojas.Nome_Loja
         """, (id_conta,))
-
         return cursor.fetchall()
-
     except Exception as e:
         print("Erro ao listar lojas do usuário:", e)
         return []
-
     finally:
         con.close()
-
-
 
 
 # ==========================
@@ -150,30 +144,54 @@ def entrar_em_loja(id_loja, id_conta):
 
     try:
         cursor = con.cursor(dictionary=True)
+
+        cursor.execute("SELECT ID_Loja, Nome_Loja, Logo_Binario FROM Lojas WHERE ID_Loja = %s", (id_loja,))
+        loja = cursor.fetchone()
+
+        if not loja:
+            return None
+
         cursor.execute("""
             SELECT 
-                Lojas.ID_Loja AS id,
-                Lojas.Nome_Loja AS nome,
-                Perfis.Nome_Perfil AS perfil,
-                Funcionarios_Loja.ID_Funcionario AS id_funcionario
+                Funcionarios_Loja.ID_Funcionario AS id_funcionario,
+                Perfis.Nome_Perfil AS perfil
             FROM Funcionarios_Loja
-            JOIN Lojas ON Lojas.ID_Loja = Funcionarios_Loja.ID_Loja
             JOIN Perfis ON Perfis.ID_Perfil = Funcionarios_Loja.ID_Perfil
             WHERE Funcionarios_Loja.ID_Loja = %s
               AND Funcionarios_Loja.ID_Conta = %s
         """, (id_loja, id_conta))
 
-        return cursor.fetchone()
+        vinculo = cursor.fetchone()
+
+        if not vinculo:
+            cursor.execute("SELECT ID_Perfil FROM Perfis WHERE Nome_Perfil='Caixa'")
+            perfil_caixa = cursor.fetchone()
+
+            cursor.execute("""
+                INSERT INTO Funcionarios_Loja (ID_Conta, ID_Loja, ID_Perfil)
+                VALUES (%s, %s, %s)
+            """, (id_conta, id_loja, perfil_caixa["ID_Perfil"]))
+            con.commit()
+
+            id_funcionario = cursor.lastrowid
+            nome_perfil = "Caixa"
+        else:
+            id_funcionario = vinculo["id_funcionario"]
+            nome_perfil = vinculo["perfil"]
+
+        return {
+            "id": loja["ID_Loja"],
+            "nome": loja["Nome_Loja"],
+            "img": loja["Logo_Binario"], # Retorna os bytes para a sessão se necessário
+            "id_funcionario": id_funcionario,
+            "perfil": nome_perfil
+        }
 
     except Exception as e:
         print("Erro ao entrar na loja:", e)
         return None
-
     finally:
         con.close()
-
-
-
 
 
 # ==========================
@@ -186,72 +204,79 @@ def associar_usuario_a_loja(id_conta, id_loja, perfil="Administrador"):
 
     try:
         cursor = con.cursor(dictionary=True)
-
         cursor.execute(
             "SELECT ID_Perfil FROM Perfis WHERE Nome_Perfil = %s",
             (perfil,)
         )
         perfil_row = cursor.fetchone()
-
         if not perfil_row:
-            print(f"Perfil '{perfil}' não encontrado.")
             return False
 
         id_perfil = perfil_row["ID_Perfil"]
-
         cursor.execute("""
             INSERT INTO Funcionarios_Loja (ID_Conta, ID_Loja, ID_Perfil)
             VALUES (%s, %s, %s)
         """, (id_conta, id_loja, id_perfil))
-
         con.commit()
-        return cursor.lastrowid  # ID_Funcionario
-
+        return cursor.lastrowid
     except Exception as e:
         print("Erro ao associar usuário à loja:", e)
         return False
-
     finally:
         con.close()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 # ==========================
 # SALVAR TEMA DA LOJA
-# ========================== 
+# ==========================
 def salvar_tema_loja(loja_id, tema):
+    con = conectar()
+    if con is None:
+        return False
+
     try:
-        conn = conectar()
-        cursor = conn.cursor()
-
-        # Converte o dicionário do tema para JSON
-        tema_json = json.dumps(tema)
-
-        # UPDATE correto para MySQL
+        cursor = con.cursor()
+        tema_json = json.dumps(tema, ensure_ascii=False)
         cursor.execute("""
-            UPDATE Lojas
-            SET Tema = %s
-            WHERE ID_Loja = %s
-        """, (tema_json, loja_id))
-
-        conn.commit()
+            INSERT INTO Temas_Lojas (ID_Loja, Tema_JSON)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE Tema_JSON = VALUES(Tema_JSON)
+        """, (loja_id, tema_json))
+        con.commit()
+        return True
     except Exception as e:
         print("Erro ao salvar tema da loja:", e)
         return False
     finally:
-        conn.close()
-    return True
+        con.close()
 
 
+# ==========================
+# BUSCAR DADOS VISUAIS DA LOJA
+# ==========================
+def buscar_dados_visuais(loja_id):
+    con = conectar()
+    if con is None:
+        return None
 
+    try:
+        cursor = con.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+                Lojas.ID_Loja AS id,
+                Lojas.Logo_Binario AS img,
+                Funcionarios_Loja.ID_Funcionario AS id_funcionario,
+                Perfis.Nome_Perfil AS perfil,
+                Temas_Lojas.Tema_JSON AS Tema_JSON
+            FROM Lojas
+            LEFT JOIN Funcionarios_Loja ON Funcionarios_Loja.ID_Loja = Lojas.ID_Loja
+            LEFT JOIN Perfis ON Perfis.ID_Perfil = Funcionarios_Loja.ID_Perfil
+            LEFT JOIN Temas_Lojas ON Temas_Lojas.ID_Loja = Lojas.ID_Loja
+            WHERE Lojas.ID_Loja = %s
+        """, (loja_id,))
+        return cursor.fetchone()
+    except Exception as e:
+        print("Erro ao buscar dados visuais:", e)
+        return None
+    finally:
+        con.close()

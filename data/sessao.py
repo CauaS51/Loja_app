@@ -11,3 +11,11 @@ nome = None
 # ID da Loja associado ao usuário
 funcionario_id = None
 perfil = None
+
+# Novas variáveis para a loja selecionada
+loja_id = None
+nome_loja = None
+logo_path = None
+
+# Tema visual da loja (vem do banco)
+tema_loja = None
