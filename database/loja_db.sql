@@ -6,7 +6,7 @@ CREATE DATABASE loja_db;
 USE loja_db;
 
 -- =========================================
--- TABELA: LOJAS
+-- LOJAS
 -- =========================================
 CREATE TABLE Lojas (
     ID_Loja INT AUTO_INCREMENT PRIMARY KEY,
@@ -15,7 +15,7 @@ CREATE TABLE Lojas (
 );
 
 -- =========================================
--- TABELA: TEMAS DAS LOJAS
+-- TEMAS DAS LOJAS
 -- =========================================
 CREATE TABLE Temas_Lojas (
     ID_Loja INT PRIMARY KEY,
@@ -24,7 +24,7 @@ CREATE TABLE Temas_Lojas (
 );
 
 -- =========================================
--- TABELA: PERFIS
+-- PERFIS
 -- =========================================
 CREATE TABLE Perfis (
     ID_Perfil INT AUTO_INCREMENT PRIMARY KEY,
@@ -38,13 +38,13 @@ INSERT INTO Perfis (Nome_Perfil) VALUES
 ('Gestor de Dados');
 
 -- =========================================
--- TABELA: CONTAS (LOGIN DO SISTEMA)
+-- CONTAS
 -- =========================================
 CREATE TABLE Contas (
     ID_Conta INT AUTO_INCREMENT PRIMARY KEY,
     Nome VARCHAR(100) NOT NULL,
     Login VARCHAR(50) UNIQUE NOT NULL,
-    Senha VARCHAR(255) NOT NULL, -- espaço para hash
+    Senha VARCHAR(255) NOT NULL,
     Email VARCHAR(150) NOT NULL,
     Telefone VARCHAR(20),
     CPF VARCHAR(14) UNIQUE NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE Contas (
 );
 
 -- =========================================
--- FUNCIONÁRIOS VINCULADOS À LOJA
+-- FUNCIONÁRIOS NA LOJA
 -- =========================================
 CREATE TABLE Funcionarios_Loja (
     ID_Funcionario INT AUTO_INCREMENT PRIMARY KEY,
@@ -66,7 +66,7 @@ CREATE TABLE Funcionarios_Loja (
 );
 
 -- =========================================
--- CATEGORIAS DE PRODUTOS
+-- CATEGORIAS
 -- =========================================
 CREATE TABLE Categorias (
     ID_Categoria INT AUTO_INCREMENT PRIMARY KEY,
@@ -78,13 +78,19 @@ CREATE TABLE Categorias (
 );
 
 -- =========================================
--- PRODUTOS
+-- PRODUTOS (MODELO PROFISSIONAL)
 -- =========================================
 CREATE TABLE Produtos (
     ID_Produto INT AUTO_INCREMENT PRIMARY KEY,
     ID_Loja INT NOT NULL,
     Nome VARCHAR(255) NOT NULL,
+    Codigo_Barras VARCHAR(50) UNIQUE,
     Preco DECIMAL(10,2) NOT NULL,
+    Custo DECIMAL(10,2),
+    Margem_Lucro DECIMAL(5,2),
+    Estoque INT DEFAULT 0,
+    Estoque_Minimo INT DEFAULT 0,
+    Unidade VARCHAR(10) DEFAULT 'UN',
     Categoria_ID INT DEFAULT NULL,
     Img VARCHAR(255),
     Ativo BOOLEAN DEFAULT TRUE,
@@ -93,7 +99,117 @@ CREATE TABLE Produtos (
 );
 
 -- =========================================
--- RELATÓRIOS
+-- MOVIMENTAÇÃO DE ESTOQUE
+-- =========================================
+CREATE TABLE Movimentacoes_Estoque (
+    ID_Mov INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Produto INT NOT NULL,
+    ID_Loja INT NOT NULL,
+    Tipo ENUM('ENTRADA','SAIDA','AJUSTE') NOT NULL,
+    Quantidade INT NOT NULL,
+    Motivo VARCHAR(100),
+    Data_Mov DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ID_Produto) REFERENCES Produtos(ID_Produto) ON DELETE CASCADE,
+    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE
+);
+
+-- =========================================
+-- VENDAS
+-- =========================================
+CREATE TABLE Vendas (
+    ID_Venda INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Loja INT NOT NULL,
+    ID_Funcionario INT,
+    Data_Venda DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Total DECIMAL(10,2),
+    Forma_Pagamento VARCHAR(50),
+    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE,
+    FOREIGN KEY (ID_Funcionario) REFERENCES Funcionarios_Loja(ID_Funcionario) ON DELETE SET NULL
+);
+
+-- =========================================
+-- ITENS DA VENDA
+-- =========================================
+CREATE TABLE Itens_Venda (
+    ID_Item INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Venda INT NOT NULL,
+    ID_Produto INT NOT NULL,
+    Quantidade INT NOT NULL,
+    Preco_Unitario DECIMAL(10,2),
+    Subtotal DECIMAL(10,2),
+    FOREIGN KEY (ID_Venda) REFERENCES Vendas(ID_Venda) ON DELETE CASCADE,
+    FOREIGN KEY (ID_Produto) REFERENCES Produtos(ID_Produto) ON DELETE CASCADE
+);
+
+-- =========================================
+-- CONTROLE DE CAIXA
+-- =========================================
+CREATE TABLE Caixas (
+    ID_Caixa INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Loja INT NOT NULL,
+    ID_Funcionario INT,
+    Data_Abertura DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Data_Fechamento DATETIME NULL,
+    Valor_Inicial DECIMAL(10,2),
+    Valor_Final DECIMAL(10,2),
+    Status ENUM('ABERTO','FECHADO') DEFAULT 'ABERTO',
+    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE,
+    FOREIGN KEY (ID_Funcionario) REFERENCES Funcionarios_Loja(ID_Funcionario) ON DELETE SET NULL
+);
+
+-- =========================================
+-- MOVIMENTAÇÕES DE CAIXA
+-- =========================================
+CREATE TABLE Movimentacoes_Caixa (
+    ID_Mov INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Caixa INT NOT NULL,
+    Tipo ENUM('SANGRIA','SUPRIMENTO') NOT NULL,
+    Valor DECIMAL(10,2),
+    Motivo VARCHAR(100),
+    Data_Mov DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ID_Caixa) REFERENCES Caixas(ID_Caixa) ON DELETE CASCADE
+);
+
+-- =========================================
+-- FORNECEDORES
+-- =========================================
+CREATE TABLE Fornecedores (
+    ID_Fornecedor INT AUTO_INCREMENT PRIMARY KEY,
+    Nome VARCHAR(150),
+    CNPJ VARCHAR(20),
+    Telefone VARCHAR(20),
+    Email VARCHAR(150)
+);
+
+-- =========================================
+-- COMPRAS
+-- =========================================
+CREATE TABLE Compras (
+    ID_Compra INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Fornecedor INT,
+    ID_Loja INT,
+    Data_Compra DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Total DECIMAL(10,2),
+    FOREIGN KEY (ID_Fornecedor) REFERENCES Fornecedores(ID_Fornecedor) ON DELETE SET NULL,
+    FOREIGN KEY (ID_Loja) REFERENCES Lojas(ID_Loja) ON DELETE CASCADE
+);
+
+-- =========================================
+-- ITENS DA COMPRA
+-- =========================================
+CREATE TABLE Itens_Compra (
+    ID_Item INT AUTO_INCREMENT PRIMARY KEY,
+    ID_Compra INT,
+    ID_Produto INT,
+    Quantidade INT,
+    Custo_Unitario DECIMAL(10,2),
+    Subtotal DECIMAL(10,2),
+    FOREIGN KEY (ID_Compra) REFERENCES Compras(ID_Compra) ON DELETE CASCADE,
+    FOREIGN KEY (ID_Produto) REFERENCES Produtos(ID_Produto) ON DELETE CASCADE
+);
+
+-- =========================================
+-- RELATÓRIOS GERADOS
 -- =========================================
 CREATE TABLE Relatorios (
     ID_Relatorio INT AUTO_INCREMENT PRIMARY KEY,

@@ -52,45 +52,70 @@ class CaixaApp:
             raise
 
     def criar_header(self):
-        """Cria o cabeçalho da aplicação"""
         cores = colors.get_colors()
-        header = ctk.CTkFrame(self.app, fg_color=cores["PRIMARY"], height=70)
-        header.pack(fill="x", padx=10, pady=(10, 5))
+
+        # === HEADER ===
+        header = ctk.CTkFrame(
+            self.app,
+            fg_color=cores["PRIMARY"],
+            height=80,
+            corner_radius=0
+        )
+        header.pack(fill="x")
 
         # Botão voltar
         btn_voltar = ctk.CTkButton(
-            header, text="← Voltar", width=100, height=35,
-            fg_color="#4B5563", hover_color="#374151",
-            text_color="white", font=ctk.CTkFont(family="Segoe UI", size=12),
+            header,
+            text="⬅",
+            width=40,
+            height=40,
+            font=ctk.CTkFont(size=20),
+            corner_radius=12,
+            text_color=cores["TEXT_PRIMARY"],
+            fg_color=cores["ENTRY_BG"],
+            hover_color=cores["HOVER"],
             command=self.voltar_menu
         )
-        btn_voltar.pack(side="left", padx=20, pady=15)
+        btn_voltar.pack(side="left", padx=20, pady=20)
 
         # Título
-        lbl_titulo = ctk.CTkLabel(
-            header, text="🛒 CAIXA - PONTO DE VENDA",
-            font=ctk.CTkFont(family="Segoe UI", size=20, weight="bold"),
-            text_color="white"
-        )
-        lbl_titulo.pack(side="left", padx=10, pady=15)
+        ctk.CTkLabel(
+            header,
+            text="🛒 Caixa · PDV",
+            text_color="white",
+            font=ctk.CTkFont("Segoe UI", 26, "bold")
+        ).pack(side="left", pady=20)
 
-        # Usuário logado
-        lbl_usuario = ctk.CTkLabel(
-            header, text=f"Operador: {sessao.nome}",
-            font=ctk.CTkFont(family="Segoe UI", size=11),
-            text_color="white"
-        )
-        lbl_usuario.pack(side="right", padx=20, pady=15)
+        # ===== DIREITA (OPERADOR + TEMA) =====
+        right_container = ctk.CTkFrame(header, fg_color="transparent")
+        right_container.pack(side="right", padx=20, pady=20)
+
+        # Operador
+        ctk.CTkLabel(
+            right_container,
+            text=f"Operador: {sessao.nome}",
+            fg_color='white',
+            corner_radius=10,
+            height=36,
+            padx=12,
+            font=ctk.CTkFont("Segoe UI", 15, "bold"),
+            text_color=cores["SECONDARY"]
+        ).pack(side="left", padx=(0, 8))
 
         # Botão tema
-        icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "☀️"
-        btn_tema = ctk.CTkButton(
-            header, text=icone_tema, width=35, height=35,
-            fg_color="#4B5563", hover_color="#374151",
-            text_color="white", font=ctk.CTkFont(size=14),
+        icone_tema = "🌙" if ctk.get_appearance_mode() == "Dark" else "🔆"
+        ctk.CTkButton(
+            right_container,
+            text=icone_tema,
+            width=40,
+            height=40,
+            corner_radius=12,
+            fg_color=cores["ENTRY_BG"],
+            hover_color=cores["HOVER"],
+            text_color=cores["TEXT_PRIMARY"],
+            font=ctk.CTkFont(size=25),
             command=self.alternar_tema
-        )
-        btn_tema.pack(side="right", padx=5, pady=15)
+        ).pack(side="left")
 
     def criar_body(self):
         """Cria o corpo principal da aplicação"""
@@ -365,12 +390,10 @@ class CaixaApp:
 
     # ==================== FUNÇÕES AUXILIARES ====================
     def voltar_menu(self):
-        """Volta para o menu principal"""
         from data import menu
         menu.mostrar_menu(self.app, sessao.nome, sessao.perfil)
 
     def alternar_tema(self):
-        """Alterna entre tema claro e escuro"""
         colors.alternar_tema()
         self.criar_tela()
         self.carregar_produtos()
@@ -629,32 +652,34 @@ class CaixaApp:
         self.btns_carrinho[codigo] = linha
 
     def selecionar_produto_direita_carrinho(self, codigo):
-        """Seleciona produto no carrinho"""
         if codigo not in self.itens_carrinho:
             return
 
-        self.produto_selecionado_dir = self.itens_carrinho[codigo]["produto"]
+        produto = self.itens_carrinho[codigo]["produto"]
+        self.produto_selecionado_dir = produto
+        self.produto_selecionado_esq = produto  # <-- faz a esquerda atualizar
+
         cores = colors.get_colors()
 
-        # Desselecionar todas
+        # Desselecionar todas as linhas do carrinho
         for linha in self.btns_carrinho.values():
             linha.configure(fg_color=cores["CARD_BG"])
             for widget in linha.winfo_children():
                 if isinstance(widget, ctk.CTkLabel):
                     widget.configure(text_color=cores["TEXT_PRIMARY"])
 
-        # Selecionar linha
-        if codigo in self.btns_carrinho:
-            linha = self.btns_carrinho[codigo]
-            linha.configure(fg_color=cores["PRIMARY"])
-            for widget in linha.winfo_children():
-                if isinstance(widget, ctk.CTkLabel):
-                    widget.configure(text_color="white")
+        # Selecionar a linha clicada
+        linha = self.btns_carrinho[codigo]
+        linha.configure(fg_color=cores["PRIMARY"])
+        for widget in linha.winfo_children():
+            if isinstance(widget, ctk.CTkLabel):
+                widget.configure(text_color="white")
 
-        self.atualizar_imagem(self.produto_selecionado_dir)
+        # Atualizar imagem e informações na esquerda
+        self.atualizar_imagem(produto)
+        self.atualizar_info_produto()
 
     def remover_produto_selecionado_direita(self):
-        """Remove produto selecionado do carrinho"""
         if not self.produto_selecionado_dir:
             messagebox.showwarning("Aviso", "Selecione um item no carrinho para remover.")
             return
@@ -669,16 +694,19 @@ class CaixaApp:
         if not codigo:
             return
 
-        # Confirmar
+        # Confirmar remoção
         if messagebox.askyesno("Confirmar", "Remover este item do carrinho?"):
             del self.itens_carrinho[codigo]
             if codigo in self.btns_carrinho:
                 del self.btns_carrinho[codigo]
-           
+
+            # Resetar seleções
             self.produto_selecionado_dir = None
+            self.produto_selecionado_esq = None  # <-- limpa a esquerda
             self.atualizar_carrinho()
             self.atualizar_totais()
-            self.img_label.configure(image="", text="🖼️", font=ctk.CTkFont(size=40))
+            self.atualizar_imagem(None)
+            self.atualizar_info_produto()  # <-- atualiza labels para nulo
 
     # ==================== TOTAIS ====================
     def atualizar_totais(self):
@@ -702,7 +730,6 @@ class CaixaApp:
         self.lbl_desconto.configure(text=f"Desconto: R$ {desconto:.2f}")
         self.lbl_acrescimo.configure(text=f"Acréscimo: R$ {acrescimo:.2f}")
         self.lbl_total.configure(text=f"TOTAL: R$ {total:.2f}")
-
 
 # ================= FUNÇÃO PARA MOSTRAR CAIXA =================
 def mostrar_menu(app):

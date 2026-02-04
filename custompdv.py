@@ -9,6 +9,8 @@ from data.colors import *
 from data import loja
 import data.cadastro as cadastro
 import data.sessao as sessao
+import os
+import shutil
 
 
 # === MODO CLARO PADRÃO ===
@@ -116,7 +118,6 @@ def mostrar_login(app):
         except Exception as e:
             print("Erro login:", e)
             messagebox.showerror("Erro", "Não foi possível conectar ao servidor.")
-
 
     # BOTÃO LOGIN        
     ctk.CTkButton(login_container, text="Entrar", font=("Arial", 15, "bold"),
@@ -255,10 +256,29 @@ def mostrar_login(app):
     ctk.CTkLabel(frame_footer, text="\n📞 (91)98765-4321   🌐 www.custompdv.com",
                  text_color="#FFFFFF", font=("Arial", 14, "bold")).pack(expand=True, pady=(0,50))
 
+def excluir_tema_cache(app):
+            import data.colors as colors
+
+            # Reseta o tema para padrão
+            colors.resetar_tema()
+
+            # Exclui a pasta 'themes' se existir
+            caminho_themes = "cache_temas"
+            if os.path.exists(caminho_themes) and os.path.isdir(caminho_themes):
+                try:
+                    shutil.rmtree(caminho_themes)
+                    print("Pasta 'cache_temas' removida com sucesso.")
+                except Exception as e:
+                    print(f"Erro ao remover pasta 'cache_temas': {e}")
+
+            # Fecha a janela
+            app.destroy()
+
 # === MAIN ===
 if __name__ == "__main__":
     app = ctk.CTk()
     app.geometry("1200x700")
     app.minsize(900, 500)
+    app.protocol("WM_DELETE_WINDOW", lambda: excluir_tema_cache(app))
     mostrar_login(app)
     app.mainloop()

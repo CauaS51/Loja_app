@@ -43,7 +43,6 @@ TEMA_PADRAO = {
 # Tema customizado da loja (vem do banco ou arquivo)
 TEMA_ATUAL = None
 
-
 # ==========================
 # CARREGAR TEMA DE ARQUIVO
 # ==========================
@@ -82,14 +81,12 @@ def get_colors():
 
     return cores_base
 
-
 # ==========================
 # ALTERNAR MODO LIGHT/DARK
 # ==========================
 def alternar_tema():
     modo_atual = ctk.get_appearance_mode()
     ctk.set_appearance_mode("Light" if modo_atual == "Dark" else "Dark")
-
 
 # ==========================
 # APLICAR TEMA VINDO DO BANCO
@@ -113,3 +110,12 @@ def aplicar_tema_customizado(tema_dict):
     except Exception as e:
         print("Erro ao aplicar tema customizado:", e)
         TEMA_ATUAL = None
+
+# ==========================
+# RESETAR TEMA PARA PADRÃO
+# ==========================
+def resetar_tema():
+    global TEMA_ATUAL
+    TEMA_ATUAL = None
+    modo_atual = ctk.get_appearance_mode()  
+    ctk.set_appearance_mode(modo_atual)
